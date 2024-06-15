@@ -8,7 +8,18 @@
   "host": "localhost:3000",
   "basePath": "/",
   "schemes": [
-    "http"
+    "http", 
+    "https"
+  ],
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Local server"
+    },
+    {
+      "url": "https://oriz-consumer-backend.onrender.com",
+      "description": "Production server"
+    }
   ],
   "paths": {
     "/api/onboarding/register": {
