@@ -11,7 +11,7 @@ const PORT = process.env.PORT;
 
 //middlewares
 app.use(bodyParser.json())
-app.use('/doc', swaggerUi.serve, swaggerUi.setup(swaggerFile))
+app.use('/swagger', swaggerUi.serve, swaggerUi.setup(swaggerFile))
 
 
 app.use('/', onboardingRoutes);

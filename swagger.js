@@ -5,7 +5,17 @@ const doc = {
     title: 'Oriz Consumer backend API',
     description: 'Description'
   },
-  host: 'localhost:3000'
+  host: 'localhost:3000',
+  servers: [
+    {
+      url: "http://localhost:3000",
+      description: "Local server"
+    },
+    {
+      url: "https://oriz-consumer-backend.onrender.com",
+      description: "Production server"
+    }
+  ]
 };
 
 const outputFile = './swagger-output.json';

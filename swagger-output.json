@@ -1,16 +1,11 @@
 {
   "swagger": "2.0",
   "info": {
-    "title": "My API",
+    "title": "Oriz Consumer backend API",
     "description": "Description",
     "version": "1.0.0"
   },
   "host": "localhost:3000",
-  "basePath": "/",
-  "schemes": [
-    "http", 
-    "https"
-  ],
   "servers": [
     {
       "url": "http://localhost:3000",
@@ -20,6 +15,10 @@
       "url": "https://oriz-consumer-backend.onrender.com",
       "description": "Production server"
     }
+  ],
+  "basePath": "/",
+  "schemes": [
+    "http"
   ],
   "paths": {
     "/api/onboarding/register": {
