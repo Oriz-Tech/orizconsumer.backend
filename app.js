@@ -3,11 +3,13 @@ require('dotenv/config');
 const swaggerUi = require('swagger-ui-express')
 const swaggerFile = require('./swagger-output.json')
 const bodyParser = require('body-parser')
+const initDatabasePool = require('./db/indexDb.js')
   
-const onboardingRoutes = require('./routes/onboarding.js'); 
+const onboardingRoutes = require('./routes/onboardingRoute.js'); 
   
 const app = express(); 
 const PORT = process.env.PORT;
+  
 
 //middlewares
 app.use(bodyParser.json())
