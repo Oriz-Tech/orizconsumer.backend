@@ -1,38 +1,75 @@
-var  config = require('../config/dbConfig');
-const  sql = require('mssql');
+var config = require('../config/dbConfig');
+const sql = require('mssql');
 
-async function executeUserSqlOperation(operation, params){
-  let result = null
+async function executeUserSqlOperation(operation, params) {
+  let result = null;
   try {
-    let  pool = await  sql.connect(config);
+    let pool = await sql.connect(config);
+
     switch (operation) {
-      case 'insert':
-        const insertQuery = `
-            INSERT INTO Users (username, firstname, lastname, password, email, datecreatedutc, lastaction, dateupdatedutc)
-            VALUES (@username, @firstname, @lastname, @password, @email,
-                   @datecreatedutc, @lastaction, @dateupdatedutc);
+      case 'profile':
+        const profileQuery = `
+            INSERT INTO Users (firstname, lastname, password, email, datecreatedutc, lastaction, dateupdatedutc, phonenumber)
+            VALUES (@firstname, @lastname, @password, @email,
+                   @datecreatedutc, @lastaction, @dateupdatedutc, @phonenumber);
           `;
-          result = await pool.request()
-            .input('username', sql.VarChar, params.username)
-            .input('firstname', sql.VarChar, params.firstname)
-            .input('lastname', sql.VarChar, params.lastname)
-            .input('password', sql.VarChar, params.password)
-            .input('email', sql.VarChar, params.email)
-            .input('datecreatedutc', sql.DateTime, params.datecreatedutc)
-            .input('lastaction', sql.DateTime, params.lastaction)
-            .input('dateupdatedutc', sql.DateTime, params.dateupdatedutc)
-            .query(insertQuery);
-          break;
+        result = await pool
+          .request()
+          .input('firstname', sql.VarChar, params.firstname)
+          .input('lastname', sql.VarChar, params.lastname)
+          .input('password', sql.VarChar, params.password)
+          .input('email', sql.VarChar, params.email)
+          .input('datecreatedutc', sql.DateTime, params.datecreatedutc)
+          .input('lastaction', sql.VarChar, params.lastaction)
+          .input('dateupdatedutc', sql.DateTime, params.dateupdatedutc)
+          .input('phonenumber', sql.VarChar, params.phonenumber)
+          .query(profileQuery);
+        break;
+
+      case 'verify':
+        const verifyQuery = `
+              UPDATE Users
+              SET isverified = @isverfied
+              WHERE email = @email;
+            `;
+        result = await pool
+          .request()
+          .input('email', sql.VarChar, params.email)
+          .input('isverified', sql.Bit, params.isverified)
+          .query(verifyQuery);
+        break;
+
+      case 'setUsername':
+        const setUsernameQuery = `
+              UPDATE Users
+              SET username = @username
+              WHERE email = @email;
+            `;
+        result = await pool
+          .request()
+          .input('username', sql.VarChar, params.username)
+          .input('isverified', sql.Bit, params.isverified)
+          .query(setUsernameQuery);
+        break;
+
+      case 'getbyEmailOrPhonenumber':
+        const getbyEmailOrPhonenumberQuery = `SELECT * FROM Users WHERE email = @email OR  phonenumber= @phonenumber;`;
+        result = await pool
+          .request()
+          .input('email', sql.VarChar, params.email)
+          .input('phonenumber', sql.VarChar, params.phonenumber)
+          .query(getbyEmailOrPhonenumberQuery);
+        break;
     }
-  } catch (error) {
-    
     return result;
+  } catch (error) {
+    throw new Error(error);
   }
 }
 
 module.exports = {
   executeUserSqlOperation
-}
+};
 
 // const { sql} = require('./indexDb.js');
 // const {pool} = require('../app.js')
@@ -60,7 +97,7 @@ module.exports = {
 //             .input('dateupdatedutc', sql.DateTime, params.dateupdatedutc)
 //             .query(insertQuery);
 //           break;
-  
+
 //         case 'update':
 //           // Example params: { username, firstname, lastname, password, email, lastaction, dateupdatedutc }
 //           const updateQuery = `
@@ -83,7 +120,7 @@ module.exports = {
 //             .input('dateupdatedutc', sql.DateTime, params.dateupdatedutc)
 //             .query(updateQuery);
 //           break;
-  
+
 //         case 'select':
 //           // Example params: { username }
 //           const selectQuery = `
@@ -94,7 +131,7 @@ module.exports = {
 //             .input('username', sql.VarChar, params.username)
 //             .query(selectQuery);
 //           break;
-  
+
 //         case 'delete':
 //           // Example params: { username }
 //           const deleteQuery = `
@@ -105,13 +142,13 @@ module.exports = {
 //             .input('username', sql.VarChar, params.username)
 //             .query(deleteQuery);
 //           break;
-  
+
 //         default:
 //           throw new Error('Unsupported operation');
 //       }
-  
+
 //       return result;
-  
+
 //     } catch (error) {
 //       throw new Error(`Error executing SQL operation (${operation}): ${error.message}`);
 //     }

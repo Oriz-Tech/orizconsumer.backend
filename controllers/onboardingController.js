@@ -1,18 +1,17 @@
-const { registerUser } = require('../services/onboardingService')
-const { User } = require('../models/userModel')
-const logger = require('../config/loggerConfig')
+const { registerUser, createProfile } = require('../services/onboardingService');
+const logger = require('../config/loggerConfig');
 
-const register = async (req, res) => {
-    try {
-        const result = await registerUser(null)
-        res.status(result.status).json(result)
-    } catch (error) {
-        res.status(error.status || 500).json(error);
-    }
-}
+const profile = async (req, res) => {
+  try {
+    logger.info(`{profile user request: ${req}}`);
+    const result = await createProfile(req.body);
+    res.status(result.status).json(result);
+  } catch (error) {
+    logger.error(`{profile user request: ${req}} failed with error ${error}`);
+    res.status(error.status || 500).json(error);
+  }
+};
 
-
-// Export of all methods as object 
 module.exports = {
-    register,
-}
+  profile
+};

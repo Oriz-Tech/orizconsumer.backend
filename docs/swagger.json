@@ -21,7 +21,7 @@
     "http"
   ],
   "paths": {
-    "/api/onboarding/register": {
+    "/api/onboarding/profile": {
       "get": {
         "description": "",
         "responses": {

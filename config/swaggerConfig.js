@@ -8,12 +8,12 @@ const doc = {
   host: 'localhost:3000',
   servers: [
     {
-      url: "http://localhost:3000",
-      description: "Local server"
+      url: 'http://localhost:3000',
+      description: 'Local server'
     },
     {
-      url: "https://oriz-consumer-backend.onrender.com",
-      description: "Production server"
+      url: 'https://oriz-consumer-backend.onrender.com',
+      description: 'Production server'
     }
   ]
 };
