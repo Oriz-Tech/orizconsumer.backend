@@ -25,7 +25,7 @@ async function executeUserSqlOperation(operation, params){
           break;
     }
   } catch (error) {
-    console.log(error);
+    
     return result;
   }
 }
