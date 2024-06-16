@@ -1,4 +1,4 @@
-var  config = require('./dbConfig');
+var  config = require('../config/dbConfig');
 const  sql = require('mssql');
 
 async function executeUserSqlOperation(operation, params){
