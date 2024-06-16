@@ -20,15 +20,54 @@
   "schemes": [
     "http"
   ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
   "paths": {
     "/api/onboarding/profile": {
-      "get": {
+      "post": {
         "description": "",
         "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/components/schemas/responseSchema"
+            },
+            "description": "OK"
+          },
           "500": {
             "description": "Internal Server Error"
           }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/profileSchema"
+              }
+            }
+          }
         }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "profileSchema": {
+        "$firstname": "",
+        "$lastname": "",
+        "$email": "",
+        "$password": "",
+        "$phonenumber": ""
+      },
+      "responseSchema": {
+        "data": {},
+        "$status": "",
+        "$code": "",
+        "$message": ""
       }
     }
   }

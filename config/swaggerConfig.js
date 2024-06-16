@@ -15,7 +15,26 @@ const doc = {
       url: 'https://oriz-consumer-backend.onrender.com',
       description: 'Production server'
     }
-  ]
+  ],
+  consumes: ['application/json'],
+  produces: ['application/json'],
+  components:{
+    schemas:{
+      profileSchema:{
+        $firstname:'',
+        $lastname:'',
+        $email:'',
+        $password:'',
+        $phonenumber:''
+      },
+      responseSchema:{
+        data: {},
+        $status: '', 
+        $code: '', 
+        $message:''
+      }
+    }
+  }
 };
 
 const outputFile = './docs/swagger.json';

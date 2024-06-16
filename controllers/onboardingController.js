@@ -2,6 +2,20 @@ const { registerUser, createProfile } = require('../services/onboardingService')
 const logger = require('../config/loggerConfig');
 
 const profile = async (req, res) => {
+  /*  #swagger.requestBody = {
+            required: true,
+            content: {
+                "application/json": {
+                    schema: {
+                        $ref: "#/components/schemas/profileSchema"
+                    }  
+                }
+            }
+        } 
+    */
+   /* #swagger.responses[200] = {
+            schema: { $ref: '#/components/schemas/responseSchema' }
+    } */
   try {
     logger.info(`{profile user request: ${req}}`);
     const result = await createProfile(req.body);
