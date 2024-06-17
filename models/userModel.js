@@ -1,4 +1,4 @@
-const { hashPassword } = require('../helpers/securityHelper');
+const { hashPassword } = require('../common/helpers/securityHelper');
 
 class User {
   id = 0;
@@ -19,8 +19,8 @@ class User {
     this.password = hashPassword(password);
     this.email = email;
     this.phonenumber = phonenumber;
-    this.datecreatedutc = new Date();
-    this.dateupdatedutc = new Date();
+    this.datecreatedutc = new Date().toUTCString();
+    this.dateupdatedutc = new Date().toUTCString();
     this.lastaction = 'PROFILED USER ACCOUNT';
   }
 

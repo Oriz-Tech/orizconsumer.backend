@@ -1,10 +1,12 @@
-var config = require('../config/dbConfig');
+var config = require('./dbConfig');
 const sql = require('mssql');
+const {getCurrentDateUtc} = require('../../common/helpers/dateTimeHelper')
 
 async function executeUserSqlOperation(operation, params) {
   let result = null;
   try {
     let pool = await sql.connect(config);
+    let currentDate = getCurrentDateUtc().toISOString().slice(0, 19).replace('T', ' ');
 
     switch (operation) {
       case 'profile':
@@ -29,13 +31,16 @@ async function executeUserSqlOperation(operation, params) {
       case 'verify':
         const verifyQuery = `
               UPDATE Users
-              SET isverified = @isverfied
+              SET isverified = @isverified, 
+                  dateupdatedutc = @dateupdatedutc
               WHERE email = @email;
             `;
         result = await pool
           .request()
           .input('email', sql.VarChar, params.email)
-          .input('isverified', sql.Bit, params.isverified)
+          .input('isverified', sql.Bit, 1)
+          .input('dateupdatedutc', sql.DateTime, currentDate)
+          .input('lastaction', sql.VarChar, 'VERIFY ACCOUNT')
           .query(verifyQuery);
         break;
 
