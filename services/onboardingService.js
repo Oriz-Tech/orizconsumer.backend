@@ -8,7 +8,7 @@ const Otp = require('../models/appModels/otpModel.js');
 
 //const sendEmail = require('../external/emailService.js');
 const { OtpTypes } = require('../common/enums/appEnums.js');
-const { comparePassword } = require('../common/helpers/securityHelper.js');
+const { comparePassword, generateToken } = require('../common/helpers/securityHelper.js');
 
 async function createProfile(params) {
   try {
@@ -66,6 +66,10 @@ async function verifyProfile(params) {
       otpType: params.otpType,
       otp: params.otp
     };
+    const userRecord = await executeUserSqlOperation('getbyEmail', request)
+    if (userRecord.recordset.length == 0) {
+      return { status: 400, message: 'Invalid user email', code: 'E00', data: null };
+    }
     let otpRecords = await executeOtpSqlOperation('getOtp', request);
 
     if (otpRecords.recordset.length == 0) {
@@ -83,11 +87,12 @@ async function verifyProfile(params) {
     if (updateRequest.rowsAffected > 0) {
       const creationResult = await executeUserSqlOperation('verify', request);
       if (creationResult.rowsAffected.length > 0) {
+        const token = generateToken(userRecord.recordset[0].Id);
         return {
           status: 200,
           message: 'User Account successfully verified',
           code: 'S00',
-          data: {}
+          data: {token: token}
         };
       }
     }
@@ -97,7 +102,27 @@ async function verifyProfile(params) {
   }
 }
 
+async function setProfileUserName(params) {
+  var request = { userId: params.userId, username: params.username };
+  const previousUsernameRecords = await executeUserSqlOperation('getbyUsername', request);
+  if(previousUsernameRecords.recordset.length > 0){
+    return {status: 400, message:'Username already exists', code: 'E00', data:null}
+  }
+
+  const setProfileRecord = await executeUserSqlOperation('setUsername', request);
+  if (setProfileRecord.rowsAffected.length > 0) {
+    return {
+      status: 200,
+      message: 'Username has been successfully set',
+      code: 'S00',
+      data: { token: params.token }
+    };
+  }
+  return { status: 400, message: 'Invalid User details', code: 'S00', data: null };
+}
+
 module.exports = {
   createProfile,
-  verifyProfile
+  verifyProfile,
+  setProfileUserName
 };

@@ -1,4 +1,5 @@
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
 function hashPassword(password) {
   try {
@@ -19,7 +20,23 @@ function comparePassword(password, hashedPassword) {
   }
 }
 
+function generateToken(userId){
+  const token = jwt.sign({userId: userId}, process.env.JWTSECRET, {expiresIn: `${process.env.JWTEXPIRES}`});
+  return token;
+}
+
+function verifyToken(token){
+  try {
+    let decoded = jwt.verify(token, process.env.JWTSECRET);
+    return decoded;
+  } catch (error) {
+    throw new Error('Invalid Access token');
+  }
+}
+
 module.exports = {
   hashPassword,
-  comparePassword
+  comparePassword,
+  generateToken,
+  verifyToken
 };

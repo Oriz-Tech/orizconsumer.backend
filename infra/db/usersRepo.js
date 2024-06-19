@@ -1,6 +1,6 @@
 var config = require('./dbConfig');
 const sql = require('mssql');
-const {getCurrentDateUtc} = require('../../common/helpers/dateTimeHelper')
+const { getCurrentDateUtc } = require('../../common/helpers/dateTimeHelper');
 
 async function executeUserSqlOperation(operation, params) {
   let result = null;
@@ -32,14 +32,15 @@ async function executeUserSqlOperation(operation, params) {
         const verifyQuery = `
               UPDATE Users
               SET isverified = @isverified, 
-                  dateupdatedutc = @dateupdatedutc
+                  dateupdatedutc = @dateupdatedutc, 
+                  lastaction = @lastaction
               WHERE email = @email;
             `;
         result = await pool
           .request()
           .input('email', sql.VarChar, params.email)
           .input('isverified', sql.Bit, 1)
-          .input('dateupdatedutc', sql.DateTime, currentDate)
+          .input('dateupdatedutc', currentDate)
           .input('lastaction', sql.VarChar, 'VERIFY ACCOUNT')
           .query(verifyQuery);
         break;
@@ -47,23 +48,48 @@ async function executeUserSqlOperation(operation, params) {
       case 'setUsername':
         const setUsernameQuery = `
               UPDATE Users
-              SET username = @username
-              WHERE email = @email;
+              SET username = @username, 
+                  dateupdatedutc = @dateupdatedutc, 
+                  lastaction = @lastaction
+              WHERE Id = @id;
             `;
         result = await pool
           .request()
           .input('username', sql.VarChar, params.username)
-          .input('isverified', sql.Bit, params.isverified)
+          .input('dateupdatedutc', currentDate)
+          .input('id', sql.Int, params.userId)
+          .input('lastaction', sql.VarChar, 'USER SET USERNAME')
           .query(setUsernameQuery);
         break;
 
+      case 'getbyEmail':
+        const getbyEmailQuery = `SELECT * FROM Users NOLOCK WHERE email = @email;`;
+        result = await pool
+          .request()
+          .input('email', sql.VarChar, params.email)
+          .query(getbyEmailQuery);
+        break;
+
       case 'getbyEmailOrPhonenumber':
-        const getbyEmailOrPhonenumberQuery = `SELECT * FROM Users WHERE email = @email OR  phonenumber= @phonenumber;`;
+        const getbyEmailOrPhonenumberQuery = `SELECT * FROM Users WHERE email = @email OR phonenumber = @phonenumber;`;
         result = await pool
           .request()
           .input('email', sql.VarChar, params.email)
           .input('phonenumber', sql.VarChar, params.phonenumber)
           .query(getbyEmailOrPhonenumberQuery);
+        break;
+
+      case 'getbyId':
+        const getbyIdQuery = `SELECT * FROM Users NOLOCK WHERE id = @id;`;
+        result = await pool.request().input('id', sql.Int, params.userId).query(getbyIdQuery);
+        break;
+
+      case 'getbyUsername':
+        const getbyUsernameQuery = `SELECT * FROM Users NOLOCK WHERE username = @username;`;
+        result = await pool
+          .request()
+          .input('username', sql.VarChar, params.username)
+          .query(getbyUsernameQuery);
         break;
     }
     return result;
@@ -75,146 +101,3 @@ async function executeUserSqlOperation(operation, params) {
 module.exports = {
   executeUserSqlOperation
 };
-
-// const { sql} = require('./indexDb.js');
-// const {pool} = require('../app.js')
-// const User = require('../models/userModel.js');
-
-// async function executeUserSqlOperation(operation, params) {
-//     let result;
-//     try {
-//       switch (operation) {
-//         case 'insert':
-//           // Example params: { username, firstname, lastname, password, email, datecreatedutc, lastaction, dateupdatedutc }
-//           const insertQuery = `
-//             INSERT INTO Users (username, firstname, lastname, password, email, datecreatedutc, lastaction, dateupdatedutc)
-//             VALUES (@username, @firstname, @lastname, @password, @email,
-//                    @datecreatedutc, @lastaction, @dateupdatedutc);
-//           `;
-//           result = await pool.request()
-//             .input('username', sql.VarChar, params.username)
-//             .input('firstname', sql.VarChar, params.firstname)
-//             .input('lastname', sql.VarChar, params.lastname)
-//             .input('password', sql.VarChar, params.password)
-//             .input('email', sql.VarChar, params.email)
-//             .input('datecreatedutc', sql.DateTime, params.datecreatedutc)
-//             .input('lastaction', sql.DateTime, params.lastaction)
-//             .input('dateupdatedutc', sql.DateTime, params.dateupdatedutc)
-//             .query(insertQuery);
-//           break;
-
-//         case 'update':
-//           // Example params: { username, firstname, lastname, password, email, lastaction, dateupdatedutc }
-//           const updateQuery = `
-//             UPDATE Users
-//             SET firstname = @firstname,
-//                 lastname = @lastname,
-//                 password = @password,
-//                 email = @email,
-//                 lastaction = @lastaction,
-//                 dateupdatedutc = @dateupdatedutc
-//             WHERE username = @username;
-//           `;
-//           result = await pool.request()
-//             .input('username', sql.VarChar, params.username)
-//             .input('firstname', sql.VarChar, params.firstname)
-//             .input('lastname', sql.VarChar, params.lastname)
-//             .input('password', sql.VarChar, params.password)
-//             .input('email', sql.VarChar, params.email)
-//             .input('lastaction', sql.DateTime, params.lastaction)
-//             .input('dateupdatedutc', sql.DateTime, params.dateupdatedutc)
-//             .query(updateQuery);
-//           break;
-
-//         case 'select':
-//           // Example params: { username }
-//           const selectQuery = `
-//             SELECT * FROM Users
-//             WHERE username = @username;
-//           `;
-//           result = await pool.request()
-//             .input('username', sql.VarChar, params.username)
-//             .query(selectQuery);
-//           break;
-
-//         case 'delete':
-//           // Example params: { username }
-//           const deleteQuery = `
-//             DELETE FROM Users
-//             WHERE username = @username;
-//           `;
-//           result = await pool.request()
-//             .input('username', sql.VarChar, params.username)
-//             .query(deleteQuery);
-//           break;
-
-//         default:
-//           throw new Error('Unsupported operation');
-//       }
-
-//       return result;
-
-//     } catch (error) {
-//       throw new Error(`Error executing SQL operation (${operation}): ${error.message}`);
-//     }
-//   }
-
-// module.exports={
-//     executeUserSqlOperation
-// }
-
-// Example usage:
-
-// async function exampleUsage() {
-//   try {
-//     // Initialize the database connection pool
-//     await initDatabasePool();
-
-//     // Example 1: Insert a user
-//     const newUserParams = {
-//       username: 'john_doe',
-//       firstname: 'John',
-//       lastname: 'Doe',
-//       password: 'hashedPassword123',
-//       email: 'john.doe@example.com',
-//       datecreatedutc: new Date(),
-//       lastaction: new Date(),
-//       dateupdatedutc: new Date()
-//     };
-//     const insertResult = await executeSqlOperation('insert', newUserParams);
-//     console.log('User inserted:', insertResult);
-
-//     // Example 2: Select a user
-//     const selectUserParams = {
-//       username: 'john_doe'
-//     };
-//     const selectResult = await executeSqlOperation('select', selectUserParams);
-//     console.log('Selected user:', selectResult.recordset);
-
-//     // Example 3: Update a user
-//     const updateUserParams = {
-//       username: 'john_doe',
-//       firstname: 'UpdatedJohn',
-//       lastname: 'UpdatedDoe',
-//       password: 'updatedHashedPassword123',
-//       email: 'john.doe.updated@example.com',
-//       lastaction: new Date(),
-//       dateupdatedutc: new Date()
-//     };
-//     const updateResult = await executeSqlOperation('update', updateUserParams);
-//     console.log('User updated:', updateResult);
-
-//     // Example 4: Delete a user
-//     const deleteUserParams = {
-//       username: 'john_doe'
-//     };
-//     const deleteResult = await executeSqlOperation('delete', deleteUserParams);
-//     console.log('User deleted:', deleteResult);
-
-//     // Close the database connection pool
-//     await closeDatabasePool();
-
-//   } catch (error) {
-//     console.error('Error:', error.message);
-//   }
-// }
