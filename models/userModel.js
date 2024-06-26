@@ -12,6 +12,8 @@ class User {
   lastaction = null;
   phonenumber = '';
   isverified = false;
+  isemailverified = false;
+  isPhonenumberVerified = false;
 
   profile(firstname, lastname, password, email, phonenumber) {
     this.firstname = firstname;

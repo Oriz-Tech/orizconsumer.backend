@@ -5,8 +5,9 @@ const checkAuthMiddleware = require('../middleware/checkAuthMiddleware');
 const authController = require('../controllers/authController')
 
 router.post('/api/onboarding/profile', onboardingController.profile);
-router.post('/api/onboarding/verify', onboardingController.verify);
-router.post('/api/onboarding/setusername', checkAuthMiddleware, onboardingController.setUserName)
+router.post('/api/onboarding/verify/email', onboardingController.verifyEmail);
+router.post('/api/onboarding/verify/phone', onboardingController.verifyPhone);
+router.post('/api/onboarding/set/username', checkAuthMiddleware, onboardingController.setUserName)
 
 router.post('/api/auth/login', authController.userlogin)
 

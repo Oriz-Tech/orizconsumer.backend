@@ -28,10 +28,10 @@ async function executeUserSqlOperation(operation, params) {
           .query(profileQuery);
         break;
 
-      case 'verify':
+      case 'verifyEmail':
         const verifyQuery = `
               UPDATE Users
-              SET isverified = @isverified, 
+              SET IsEmailVerified = @IsEmailVerified, 
                   dateupdatedutc = @dateupdatedutc, 
                   lastaction = @lastaction
               WHERE email = @email;
@@ -39,11 +39,28 @@ async function executeUserSqlOperation(operation, params) {
         result = await pool
           .request()
           .input('email', sql.VarChar, params.email)
-          .input('isverified', sql.Bit, 1)
+          .input('IsEmailVerified', sql.Bit, 1)
           .input('dateupdatedutc', currentDate)
-          .input('lastaction', sql.VarChar, 'VERIFY ACCOUNT')
+          .input('lastaction', sql.VarChar, 'VERIFY EMAIL ACCOUNT')
           .query(verifyQuery);
         break;
+
+        case 'verifyPhone':
+          const verifyPhoneQuery = `
+                UPDATE Users
+                SET IsPhonenumberVerified = @IsPhonenumberVerified, 
+                    dateupdatedutc = @dateupdatedutc, 
+                    lastaction = @lastaction
+                WHERE phonenumber = @phonenumber;
+              `;
+          result = await pool
+            .request()
+            .input('phonenumber', sql.VarChar, params.phonenumber)
+            .input('IsPhonenumberVerified', sql.Bit, 1)
+            .input('dateupdatedutc', currentDate)
+            .input('lastaction', sql.VarChar, 'VERIFY PHONENUMBER ACCOUNT')
+            .query(verifyPhoneQuery);
+          break;
 
       case 'setUsername':
         const setUsernameQuery = `
@@ -68,6 +85,14 @@ async function executeUserSqlOperation(operation, params) {
           .request()
           .input('email', sql.VarChar, params.email)
           .query(getbyEmailQuery);
+        break;
+      
+      case 'getbyPhone':
+        const getbyPhoneQuery = `SELECT * FROM Users NOLOCK WHERE phonenumber = @phonenumber;`;
+        result = await pool
+          .request()
+          .input('phonenumber', sql.VarChar, params.phonenumber)
+          .query(getbyPhoneQuery);
         break;
 
       case 'getbyEmailOrPhonenumber':

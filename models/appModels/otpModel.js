@@ -4,11 +4,11 @@ const { hashPassword } = require('../../common/helpers/securityHelper');
 const otpTime = process.env.OTP;
 
 class Otp{
-    constructor(otp, email, otpType){
+    constructor(otp, identifier, otpType){
         let currentDate = new Date();
         let expirationDate = new Date(currentDate.getTime() + (1000 * otpTime));
         this.otp = hashPassword(otp);
-        this.email = email;
+        this.identifier = identifier;
         this.isUsed = false;
         this.dateCreatedUtc = currentDate.toUTCString();
         this.otpHeader = uuidv4();

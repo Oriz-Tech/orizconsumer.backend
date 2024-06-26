@@ -11,13 +11,13 @@ async function executeOtpSqlOperation(operation, params) {
     switch (operation) {
       case 'addOtp':
         const addOtpQuery = `
-            INSERT INTO Otps (otp, email, isUsed, dateCreatedUtc, otpHeader, dateToExpireUtc, otpType)
-            VALUES (@otp, @email, @isUsed, @dateCreatedUtc, @otpHeader, @dateToExpireUtc, @otpType);
+            INSERT INTO Otps (otp, identifier, isUsed, dateCreatedUtc, otpHeader, dateToExpireUtc, otpType)
+            VALUES (@otp, @identifier, @isUsed, @dateCreatedUtc, @otpHeader, @dateToExpireUtc, @otpType);
           `;
         result = await pool
           .request()
           .input('otp', sql.VarChar, params.otp)
-          .input('email', sql.VarChar, params.email)
+          .input('identifier', sql.VarChar, params.identifier)
           .input('isUsed', sql.Bit, params.isUsed)
           .input('dateCreatedUtc', sql.DateTime, params.dateCreatedUtc)
           .input('otpHeader', sql.VarChar, params.otpHeader)
@@ -32,11 +32,11 @@ async function executeOtpSqlOperation(operation, params) {
               SET 
                 isUsed = @isUsed,
                 dateupdatedutc = @dateupdatedutc
-              WHERE email = @email AND otpHeader= @otpHeader AND otpType=@otpType;
+              WHERE identifier = @identifier AND otpHeader= @otpHeader AND otpType=@otpType;
             `;
         result = await pool
           .request()
-          .input('email', sql.VarChar, params.email)
+          .input('identifier', sql.VarChar, params.identifier)
           .input('otpHeader', sql.VarChar, params.otpHeader)
           .input('otpType', sql.Int, params.otpType)
           .input('isUsed', sql.Bit, 1)
@@ -46,7 +46,7 @@ async function executeOtpSqlOperation(operation, params) {
 
       case 'getOtp':
         const getOtpQuery = `SELECT * FROM Otps WHERE 
-          email = @email AND 
+          identifier = @identifier AND 
           otpHeader= @otpHeader AND 
           otpType=@otpType AND 
           isUsed = 0 AND 
@@ -54,7 +54,7 @@ async function executeOtpSqlOperation(operation, params) {
 
         result = await pool
           .request()
-          .input('email', sql.VarChar, params.email)
+          .input('identifier', sql.VarChar, params.identifier)
           .input('otpHeader', sql.VarChar, params.otpHeader)
           .input('otpType', sql.Int, params.otpType)
           .query(getOtpQuery);

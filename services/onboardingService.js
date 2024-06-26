@@ -42,12 +42,12 @@ async function createProfile(params) {
       // sending email mechanism
       //sendEmail(newUser.email, 'Verify Your Email',`<p>Here is your Otp Code ${otpCode}</p>`);
 
-      const otpRecord = new Otp(otpCode, newUser.email, OtpTypes.ONBOARDING);
+      const otpRecord = new Otp(otpCode, newUser.phonenumber, OtpTypes.ONBOARDING);
       await executeOtpSqlOperation('addOtp', otpRecord);
 
       return {
         status: 200,
-        message: `User account created and OTP has been sent to ${newUser.email}`,
+        message: `User account created and OTP has been sent to ${newUser.phonenumber}`,
         code: 'S00',
         data: { otpHeader: otpRecord.otpHeader, otp: otpCode, otpType: OtpTypes.ONBOARDING }
       };
@@ -58,15 +58,15 @@ async function createProfile(params) {
   }
 }
 
-async function verifyProfile(params) {
+async function verifyProfileEmail(params) {
   try {
     var request = {
-      email: params.email,
+      identifier: params.identifier,
       otpHeader: params.otpHeader,
       otpType: params.otpType,
       otp: params.otp
     };
-    const userRecord = await executeUserSqlOperation('getbyEmail', request)
+    const userRecord = await executeUserSqlOperation('getbyEmail', {email:params.identifier})
     if (userRecord.recordset.length == 0) {
       return { status: 400, message: 'Invalid user email', code: 'E00', data: null };
     }
@@ -85,7 +85,7 @@ async function verifyProfile(params) {
 
     const updateRequest = await executeOtpSqlOperation('setToUsed', request);
     if (updateRequest.rowsAffected > 0) {
-      const creationResult = await executeUserSqlOperation('verify', request);
+      const creationResult = await executeUserSqlOperation('verifyEmail', {email: params.identifier});
       if (creationResult.rowsAffected.length > 0) {
         const token = generateToken(userRecord.recordset[0].Id);
         return {
@@ -93,6 +93,54 @@ async function verifyProfile(params) {
           message: 'User Account successfully verified',
           code: 'S00',
           data: {token: token}
+        };
+      }
+    }
+  } catch (error) {
+    logger.error(`Error occured while creating user ${err}`);
+    return { status: 500, message: 'Internal server error', code: 'E00', data: null };
+  }
+}
+
+async function verifyProfilePhonenumber(params) {
+  try {
+    var request = {
+      identifier: params.identifier,
+      otpHeader: params.otpHeader,
+      otpType: params.otpType,
+      otp: params.otp
+    };
+    const userRecord = await executeUserSqlOperation('getbyPhone', {phonenumber:params.identifier})
+    if (userRecord.recordset.length == 0) {
+      return { status: 400, message: 'Invalid user phonenumber', code: 'E00', data: null };
+    }
+    const userEmail = userRecord.recordset[0].Email;
+    let otpRecords = await executeOtpSqlOperation('getOtp', request);
+
+    if (otpRecords.recordset.length == 0) {
+      return { status: 400, message: 'Invalid Otp', code: 'E00', data: null };
+    }
+
+    var otpRecord = otpRecords.recordset[0];
+    let otpHash = otpRecord.Otp;
+
+    if (!comparePassword(request.otp, otpHash)) {
+      return { status: 400, message: 'Invalid Otp', code: 'E00', data: null };
+    }
+
+    const updateRequest = await executeOtpSqlOperation('setToUsed', request);
+    if (updateRequest.rowsAffected > 0) {
+      const creationResult = await executeUserSqlOperation('verifyPhone', {phonenumber:params.identifier});
+      if (creationResult.rowsAffected.length > 0) {
+        let otpCode = Math.floor(10000 + Math.random() * 90000).toString();
+        const otpRecord = new Otp(otpCode, userEmail, OtpTypes.ONBOARDING);
+        await executeOtpSqlOperation('addOtp', otpRecord);
+
+        return {
+          status: 200,
+          message: `User account created and OTP has been sent to ${userEmail}`,
+          code: 'S00',
+          data: { otpHeader: otpRecord.otpHeader, otp: otpCode, otpType: OtpTypes.ONBOARDING }
         };
       }
     }
@@ -123,6 +171,7 @@ async function setProfileUserName(params) {
 
 module.exports = {
   createProfile,
-  verifyProfile,
+  verifyProfilePhonenumber,
+  verifyProfileEmail,
   setProfileUserName
 };
