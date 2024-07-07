@@ -37,7 +37,7 @@ async function createProfile(params) {
 
     const creationResult = await executeUserSqlOperation('profile', newUser);
     if (creationResult.rowsAffected.length > 0) {
-      let otpCode = Math.floor(10000 + Math.random() * 90000).toString();
+      let otpCode = "123456" //Math.floor(10000 + Math.random() * 90000).toString();
 
       // sending email mechanism
       //sendEmail(newUser.email, 'Verify Your Email',`<p>Here is your Otp Code ${otpCode}</p>`);
@@ -132,7 +132,7 @@ async function verifyProfilePhonenumber(params) {
     if (updateRequest.rowsAffected > 0) {
       const creationResult = await executeUserSqlOperation('verifyPhone', {phonenumber:params.identifier});
       if (creationResult.rowsAffected.length > 0) {
-        let otpCode = Math.floor(10000 + Math.random() * 90000).toString();
+        let otpCode = "123456" //Math.floor(10000 + Math.random() * 90000).toString();
         const otpRecord = new Otp(otpCode, userEmail, OtpTypes.ONBOARDING);
         await executeOtpSqlOperation('addOtp', otpRecord);
 
