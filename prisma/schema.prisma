@@ -1,0 +1,64 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlserver"
+  url      = env("DATABASE_URL")
+}
+
+
+model User {
+  id                   Int      @id @default(autoincrement())
+  username             String
+  firstname            String
+  lastname             String
+  password             String
+  email                String   @unique
+  datecreatedutc       DateTime @default(now())
+  dateupdatedutc       DateTime @updatedAt
+  lastaction           String?
+  phonenumber          String
+  isverified           Boolean  @default(false)
+  isemailverified      Boolean  @default(false)
+  isPhonenumberVerified Boolean  @default(false)
+  plans                UserPlan[]
+
+  @@map("Users")
+}
+
+model UserPlan {
+  id           Int      @id @default(autoincrement())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  day          String   @db.VarChar(10)
+  mealPlan     String   @db.VarChar(1000)
+  fitnessPlan  String   @db.NVarChar(500)
+  isDone       Boolean  @default(false)
+  user         User     @relation(fields: [userId], references: [id])
+  userId       Int
+
+  @@map("UserPlans")
+}
+
+model UserSubscription{
+  id            Int @id @default(autoincrement())
+  userId       Int
+  isActive    Boolean @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt DateTime?
+  subscriptionType Int
+  lastAction String?
+  nextBillingDate DateTime
+
+  @@map("UserSubscriptions")
+}
+
+
+// schema.prisma

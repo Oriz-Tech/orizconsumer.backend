@@ -1,15 +1,15 @@
 const logger = require('../config/loggerConfig');
-const { generate_plan } = require('../services/recommendationService');
+const { subscribe } = require('../services/subscriptionService');
 
-const generatePlan = async(req, res) => {
+const trialSubscription = async(req, res) => {
     try {
-        logger.info(`{generatePlan user request: ${req.body}}`);
+        logger.info(`{trialSubscription user request: ${req.userId}}`);
         req.body.userId = req.user.userId;
         req.body.token = req.token;
-        const result = await generate_plan(req.body);
+        const result = await subscribe(req.body);
         res.status(result.status).json(result);
       } catch (error) {
-        logger.error(`{generatePlan user request: ${req.body}} failed with error ${error}`);
+        logger.error(`{trialSubscription user request: ${req.user}} failed with error ${error}`);
         res.status(error.status || 500).json({
           status: 500,
           message: 'Sorry, an error occured',
@@ -19,5 +19,5 @@ const generatePlan = async(req, res) => {
       }
 }
 module.exports = {
-    generatePlan
+    trialSubscription
 };

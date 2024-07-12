@@ -1,10 +1,16 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
+const { getCurrentDateUtc } = require("../common/helpers/dateTimeHelper")
 
 // Access your API key as an environment variable (see "Set up your API key" above)
 const genAI = new GoogleGenerativeAI(process.env.API_KEY);
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash"});
+const { PrismaClient } = require('@prisma/client');
+
+const prisma = new PrismaClient();
 
 async function generate_plan(params){
+    let userId = params.userId
+    let currentDate = getCurrentDateUtc().toISOString().slice(0, 19).replace('T', ' ');
     let medicalCondition = "has no medical condition"
     let dietaryRestriction = "has no dietary restriction"
 
@@ -33,8 +39,10 @@ async function generate_plan(params){
         "type": "object",
         "properties": {
             "day": { "type": "string" },
-            "meal plan": { "type": "string" },
-            "fitness plan":{ "type": "string" }
+            "mealPlan": { "type": "string" },
+            "fitnessPlan":{ "type": "string" },
+            "isDone": {"type":"boolean"},
+            "userId": ${userId},
         }
     }`;
 
@@ -46,13 +54,22 @@ async function generate_plan(params){
     let endIndex = text.lastIndexOf(']');
     let jsonContent = text.substring(startIndex, endIndex+1).trim();
 
-    console.log(jsonContent);
+    //console.log(jsonContent);
+
+    let data = JSON.parse(jsonContent)
+
+    //console.log(prisma)
+    const addedResult = await prisma.userPlan.createMany({
+        data:data
+    })
+
+
 
     return {
         status: 200,
         message: 'Success',
         code: 'S00',
-        data: JSON.parse(jsonContent)
+        data:  data
       };
 }
 
