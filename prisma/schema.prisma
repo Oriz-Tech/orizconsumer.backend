@@ -29,6 +29,7 @@ model User {
   isemailverified      Boolean  @default(false)
   isPhonenumberVerified Boolean  @default(false)
   plans                UserPlan[]
+  userplansettings    UserPlanSettings[]
 
   @@map("Users")
 }
@@ -43,6 +44,7 @@ model UserPlan {
   isDone       Boolean  @default(false)
   user         User     @relation(fields: [userId], references: [id])
   userId       Int
+  planCorrelationId String
 
   @@map("UserPlans")
 }
@@ -56,8 +58,31 @@ model UserSubscription{
   subscriptionType Int
   lastAction String?
   nextBillingDate DateTime
-
   @@map("UserSubscriptions")
+}
+
+model UserPlanSettings{
+  id    Int @id @default(autoincrement())
+  typeOfWork String?
+  occupation String?
+  dailyRoutine String?
+  weightGoal String?
+  hasMedicationCondition Boolean @default(false)
+  medicalCondition String?
+  hasDietaryRestriction Boolean @default(false)
+  dietaryRestriction String?
+  weight Int
+  height Int
+  enjoyedActivity String?
+  daysPerWeek Int
+  hoursPerDay Int
+  sleepingHours Int
+  isActive Boolean @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt DateTime?
+  user         User     @relation(fields: [userId], references: [id])
+  userId       Int
+  planCorrelationId String
 }
 
 

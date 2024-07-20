@@ -13,7 +13,7 @@ router.post('/api/onboarding/set/username', checkAuthMiddleware, onboardingContr
 
 router.post('/api/auth/login', authController.userlogin)
 
-router.post('/api/recommendation/generateplan', recommendationController.generatePlan)
+router.post('/api/recommendation/generateplan', checkAuthMiddleware, recommendationController.generatePlan)
 
 router.post('/api/subscribe/trial', checkAuthMiddleware, subscriptionController.trialSubscription)
 

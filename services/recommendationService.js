@@ -1,5 +1,6 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const { getCurrentDateUtc } = require("../common/helpers/dateTimeHelper")
+const { v4: uuidv4 } = require('uuid');
 
 // Access your API key as an environment variable (see "Set up your API key" above)
 const genAI = new GoogleGenerativeAI(process.env.API_KEY);
@@ -22,18 +23,11 @@ async function generate_plan(params){
         dietaryRestriction = "is " + params.dietaryRestriction
     }
 
-    // let prompt = "Generate a daily meal and fitness plan for each week of a month in a"+
-    // "json format of day, category (meal or fitness), activity and description for someone "
-    // "who is "+ params.typeOfWork +"and works as a"+ params.occupation +". He is an "+ params.dailyRoutine+" who does not go to gym, "+
-    // "looking to "+ params.weightGoal +" and "+medicalCondition+". His body weight is "+params.weight +" and height of "+ params.height + 
-    // params.enjoyedActivity +"  and willing to coming "+ params.daysPerWeek+" days a week of "+ params.hoursPerDay +" hours per day to a fitness goal"+
-    // "and "+ dietaryRestriction +
-    // "He gets "+ params.sleepingHours +" hours of sleep per night"
-
+    let planCorrelationId = uuidv4()
     let prompt = `Generate a meal and fitness plan for someone 
     who is ${params.typeOfWork} +"and works as a ${params.occupation}. He is an ${params.dailyRoutine} who does not go to gym, 
     looking to ${params.weightGoal} and ${medicalCondition}. His body weight is ${params.weight} and height of  ${params.height}  
-    ${params.enjoyedActivity} and willing to coming ${params.daysPerWeek} days a week of ${params.hoursPerDay} hours per day to a fitness goal
+    ${params.enjoyedActivity} and willing to coming ${params.daysPerWeek} days a week of ${params.hoursPerDayForFitness} hours per day to a fitness goal
     and ${dietaryRestriction}. He gets ${params.sleepingHours} hours of sleep per night using this JSON Schema: 
     {   
         "type": "object",
@@ -43,6 +37,7 @@ async function generate_plan(params){
             "fitnessPlan":{ "type": "string" },
             "isDone": {"type":"boolean"},
             "userId": ${userId},
+            "planCorrelationId": ${planCorrelationId}
         }
     }`;
 
@@ -57,12 +52,36 @@ async function generate_plan(params){
     //console.log(jsonContent);
 
     let data = JSON.parse(jsonContent)
+    //console.log(data)
 
     //console.log(prisma)
     const addedResult = await prisma.userPlan.createMany({
         data:data
     })
 
+    //save request 
+    let request = {
+        "typeOfWork":params.typeOfWork,
+        "occupation":params.occupation,
+        "dailyRoutine": params.dailyRoutine,
+        "weightGoal":params.weightGoal,
+        "hasMedicationCondition": params.hasMedicationCondition, 
+        "medicalCondition":params.medicalCondition,
+        "hasDietaryRestriction":params.hasDietaryRestriction,
+        "dietaryRestriction": params.dietaryRestriction,
+        "weight":params.weight,
+        "height":params.height,
+        "enjoyedActivity": params.enjoyedActivity,
+        "daysPerWeek": params.daysPerWeek,
+        "hoursPerDay":params.hoursPerDayForFitness,
+        "sleepingHours":params.sleepingHours,
+        "userId": userId,
+        "planCorrelationId": planCorrelationId
+    }
+
+    const requestResult = await prisma.userPlanSettings.create({
+        data: request
+    })
 
 
     return {
