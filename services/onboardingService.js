@@ -30,9 +30,9 @@ async function createProfile(params) {
     newUser.profile(
       params.firstname,
       params.lastname,
-      params.password,
-      params.email,
-      params.phonenumber
+      params.password.trim(),
+      params.email.trim(),
+      params.phonenumber.trim()
     );
 
     const creationResult = await executeUserSqlOperation('profile', newUser);
@@ -151,7 +151,7 @@ async function verifyProfilePhonenumber(params) {
 }
 
 async function setProfileUserName(params) {
-  var request = { userId: params.userId, username: params.username };
+  var request = { userId: params.userId, username: params.username.trim() };
   const previousUsernameRecords = await executeUserSqlOperation('getbyUsername', request);
   if(previousUsernameRecords.recordset.length > 0){
     return {status: 400, message:'Username already exists', code: 'E00', data:null}

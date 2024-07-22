@@ -26,13 +26,13 @@ model User {
   dateupdatedutc       DateTime @updatedAt
   lastaction           String?
   phonenumber          String
-  isverified           Boolean  @default(false)
-  isemailverified      Boolean  @default(false)
-  isPhonenumberVerified Boolean  @default(false)
+  isverified           Boolean?  @default(false)
+  isemailverified      Boolean?  @default(false)
+  isPhonenumberVerified Boolean?  @default(false)
   plans                UserPlan[]
   userplansettings    UserPlanSettings[]
-  DateOfBirth         DateTime?
-  Gender              String?
+  dateOfBirth         DateTime?
+  gender              String?
 
   @@map("Users")
 }

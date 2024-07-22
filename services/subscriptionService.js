@@ -31,7 +31,7 @@ async function subscribe(params) {
   } 
   return {
     status: 200,
-    message: `Subscripition sucessful. \n Next billing date is ${nextBillingDate}`,
+    message: `Subscription sucessful. \n Next billing date is ${nextBillingDate}`,
     code: 'S00',
     data: null
   };
