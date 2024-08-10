@@ -6,7 +6,7 @@ const { executeOtpSqlOperation } = require('../infra/db/otpRepo.js');
 const User = require('../models/userModel.js');
 const Otp = require('../models/appModels/otpModel.js');
 
-//const sendEmail = require('../external/emailService.js');
+const { sendEmail, sendSMS } = require('../infra/external/email_sms_service.js');
 const { OtpTypes } = require('../common/enums/appEnums.js');
 const {
   comparePassword,
@@ -16,6 +16,7 @@ const {
 const { getCurrentDateUtc } = require('../common/helpers/dateTimeHelper');
 
 const { Prisma, PrismaClient } = require('@prisma/client');
+const { Console } = require('console');
 
 const prisma = new PrismaClient();
 
@@ -46,14 +47,12 @@ async function createProfile(params) {
 
     const creationResult = await executeUserSqlOperation('profile', newUser);
     if (creationResult.rowsAffected.length > 0) {
-      let otpCode = '123456'; //Math.floor(10000 + Math.random() * 90000).toString();
-
-      // sending email mechanism
-      //sendEmail(newUser.email, 'Verify Your Email',`<p>Here is your Otp Code ${otpCode}</p>`);
-
+      let otpCode ='12345'// Math.floor(10000 + Math.random() * 90000).toString();
       const otpRecord = new Otp(otpCode, newUser.phonenumber, OtpTypes.ONBOARDING);
       await executeOtpSqlOperation('addOtp', otpRecord);
-
+      console.log('sending otp to phonenumber')
+      const response = await sendSMS(newUser.phonenumber, `otp to for onboarding ${otpCode}`)
+      console.log('response '+ response)
       return {
         status: 200,
         message: `User account created and OTP has been sent to ${newUser.phonenumber}`,
@@ -147,9 +146,15 @@ async function verifyProfilePhonenumber(params) {
         phonenumber: params.identifier
       });
       if (creationResult.rowsAffected.length > 0) {
-        let otpCode = '123456'; //Math.floor(10000 + Math.random() * 90000).toString();
+        let otpCode ='12345'// Math.floor(10000 + Math.random() * 90000).toString();
         const otpRecord = new Otp(otpCode, userEmail, OtpTypes.ONBOARDING);
         await executeOtpSqlOperation('addOtp', otpRecord);
+        
+        console.log('sending email')
+        const sendingEmailResponse = await sendEmail(userEmail, 'Oriz Health - Onboarding Otp', 
+          `Use the Otp ${otpCode}`)
+        
+        console.log(sendingEmailResponse);
 
         return {
           status: 200,
