@@ -33,6 +33,10 @@ model User {
   userplansettings    UserPlanSettings[]
   dateOfBirth         DateTime?
   gender              String?
+  inviteid            String?
+  referalnumbers      Int?
+  language            String?
+  timeZone            String?
 
   @@map("Users")
 }
@@ -86,6 +90,7 @@ model UserPlanSettings{
   user         User     @relation(fields: [userId], references: [id])
   userId       Int
   planCorrelationId String
+  neededCalPerday Int?
 }
 
 

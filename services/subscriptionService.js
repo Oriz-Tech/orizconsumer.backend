@@ -17,7 +17,6 @@ async function subscribe(params) {
       }
     });
   } catch (error) {
-    console.log(error.message)
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
       return {
         status: 400,

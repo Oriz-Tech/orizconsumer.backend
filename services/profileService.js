@@ -149,8 +149,44 @@ async function changePassword(params) {
   }
 }
 
+async function updateLanguageTimeZone(params){
+  try {
+    const user = await prisma.user.update({
+      where: {
+        id: params.userId
+      },
+      data: {
+        language: params.language, 
+        timeZone: params.timezone
+      }
+    });
+    if(user.id != null){
+    return {
+      data: null,
+      status: 200,
+      message: 'Update successful',
+      code: 'S00'
+    };
+  }
+  return {
+    data: null,
+    status: 400,
+    message: 'Updating language and Time Zone failed',
+    code: 'E00'
+  };
+  } catch (error) {
+    logger.info('updateLanguageTimeZone', error);
+    return {
+      data: null,
+      status: 500,
+      message: 'Internal Server Error',
+      code: 'S00'
+    };
+  }
+}
 module.exports = {
   getEditUserDetails,
   updateEditUserDetails,
-  changePassword
+  changePassword,
+  updateLanguageTimeZone
 };

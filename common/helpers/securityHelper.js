@@ -34,9 +34,25 @@ function verifyToken(token){
   }
 }
 
+function generateReferalLink() {
+  const numbers = '0123456789';
+  const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+  
+  let result = '';
+  for (let i = 0; i < 7; i++) {
+      result += numbers.charAt(Math.floor(Math.random() * numbers.length));
+  }
+  const randomLetter = letters.charAt(Math.floor(Math.random() * letters.length));
+  const randomPosition = Math.floor(Math.random() * result.length);
+  result = result.slice(0, randomPosition) + randomLetter + result.slice(randomPosition);
+  
+  return result;
+}
+
 module.exports = {
   hashPassword,
   comparePassword,
   generateToken,
-  verifyToken
+  verifyToken,
+  generateReferalLink
 };

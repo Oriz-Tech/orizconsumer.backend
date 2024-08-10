@@ -1,9 +1,14 @@
 const { comparePassword, generateToken } = require('../common/helpers/securityHelper.js');
 const logger = require('../config/loggerConfig');
 const { executeloginhistorySqlOperation } = require('../infra/db/loginHistoryRepo.js');
-
 const { executeUserSqlOperation } = require('../infra/db/usersRepo.js');
+
 const LoginHistory = require('../models/appModels/logingHistoryModel.js');
+const { getCurrentDateUtc } = require('../common/helpers/dateTimeHelper');
+
+const { PrismaClient } = require('@prisma/client');
+
+const prisma = new PrismaClient();
 
 async function login(params) {
   await executeloginhistorySqlOperation(
@@ -11,11 +16,14 @@ async function login(params) {
     new LoginHistory(params.email, 'LOGIN ATTEMPTED')
   );
 
-  const userRecord = await executeUserSqlOperation('getbyEmail', { email: params.email });
+  const currentUser = await prisma.user.findUnique({
+    where: {
+      email:params.email
+    }
+  })
 
-  if (userRecord.recordset.length > 0) {
-    const currentUser = userRecord.recordset[0];
-    if (comparePassword(params.password, currentUser.Password)) {
+  if (currentUser != null) {
+    if (comparePassword(params.password, currentUser.password)) {
       await executeloginhistorySqlOperation(
         'addloginHistory',
         new LoginHistory(params.email, 'LOGIN SUCCESSFULLY')
@@ -30,7 +38,10 @@ async function login(params) {
           lastname: currentUser.LastName,
           email: currentUser.Email,
           phonenumber: currentUser.Phonenumber,
-          token: token
+          token: token, 
+          inviteid: currentUser.inviteid,
+          language: currentUser.language, 
+          timezone: currentUser.timeZone
         }
       };
     } else {

@@ -49,12 +49,7 @@ async function generate_plan(params){
     let endIndex = text.lastIndexOf(']');
     let jsonContent = text.substring(startIndex, endIndex+1).trim();
 
-    //console.log(jsonContent);
-
     let data = JSON.parse(jsonContent)
-    //console.log(data)
-
-    //console.log(prisma)
     const addedResult = await prisma.userPlan.createMany({
         data:data
     })
