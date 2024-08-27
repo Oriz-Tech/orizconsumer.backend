@@ -65,6 +65,8 @@ model UserSubscription{
   subscriptionType Int
   lastAction String?
   nextBillingDate DateTime
+  paymentStage String?
+  paymentReference String?
   @@map("UserSubscriptions")
 }
 
@@ -93,5 +95,18 @@ model UserPlanSettings{
   neededCalPerday Int?
 }
 
+model AppSubscription{
+  id   Int @id @default(autoincrement()) 
+  amount Float 
+  code  String
+  name String
+  @@map("AppSubscriptions")
+} 
 
-// schema.prisma
+model WebhookLog{
+  id   Int @id @default(autoincrement()) 
+  payload String?
+  event String?
+   @@map("WebhookLogs")
+}
+

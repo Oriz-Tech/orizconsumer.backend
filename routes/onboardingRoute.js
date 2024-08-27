@@ -18,6 +18,8 @@ router.post('/api/auth/login', authController.userlogin)
 router.post('/api/recommendation/generateplan', checkAuthMiddleware, recommendationController.generatePlan)
 
 router.post('/api/subscribe/trial', checkAuthMiddleware, subscriptionController.trialSubscription)
+router.get('/api/subscribe/plans', checkAuthMiddleware, subscriptionController.getSubscriptionPlans)
+
 
 router.get('/api/profile', checkAuthMiddleware, profileController.getProfile)
 router.put('/api/profile', checkAuthMiddleware, profileController.editProfile)
