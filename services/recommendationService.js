@@ -37,7 +37,8 @@ async function generate_plan(params){
             "fitnessPlan":{ "type": "string" },
             "isDone": {"type":"boolean"},
             "userId": ${userId},
-            "planCorrelationId": ${planCorrelationId}
+            "planCorrelationId": ${planCorrelationId}, 
+            "isActive": ${true}
         }
     }`;
 
@@ -71,7 +72,7 @@ async function generate_plan(params){
         "hoursPerDay":params.hoursPerDayForFitness,
         "sleepingHours":params.sleepingHours,
         "userId": userId,
-        "planCorrelationId": planCorrelationId
+        "planCorrelationId": planCorrelationId,
     }
 
     const requestResult = await prisma.userPlanSettings.create({
@@ -87,6 +88,55 @@ async function generate_plan(params){
       };
 }
 
+async function get_ai_recommendation(params){
+    let userId = params.userId
+    const data = await prisma.userPlan.findMany({
+        where: {
+            userId: userId
+        }
+    })
+    console.log(data)
+    return {
+        status: 200,
+        message: 'Success',
+        code: 'S00',
+        data:  data
+      };
+}
+
+async function complete_plan_items(params){
+    try {
+        const plan_item = await prisma.userPlan.update({
+          where: {
+            id: params.planId,
+            userId:params.userId
+          },
+          data: {
+            isDone: true, 
+            updatedAt: getCurrentDateUtc()
+          }
+        });
+        if (plan_item == null) {
+          return {
+            status: 400,
+            message: 'Could not update plan settings. Kindly try again later.',
+            code: 'E00',
+            data: null
+          };
+        }
+        return {
+          status: 200,
+          message: 'Plan item completed',
+          code: 'S00',
+          data: null
+        };
+      } catch (error) {
+        logger.log(error, 'complete_plan_items failed ' + error);
+        return { status: 500, message: 'An Error occured', code: 'E00', data: null };
+      }
+}
 module.exports = {
-    generate_plan
+    generate_plan,
+    get_ai_recommendation,
+    complete_plan_items
 }

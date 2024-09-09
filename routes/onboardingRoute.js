@@ -16,6 +16,8 @@ router.post('/api/onboarding/set/username', checkAuthMiddleware, onboardingContr
 router.post('/api/auth/login', authController.userlogin)
 
 router.post('/api/recommendation/generateplan', checkAuthMiddleware, recommendationController.generatePlan)
+router.get('/api/recommendation/plan', checkAuthMiddleware, recommendationController.getAiRecommendation)
+router.put('/api/recommendation/plan', checkAuthMiddleware, recommendationController.completePlanItems)
 
 router.post('/api/subscribe/trial', checkAuthMiddleware, subscriptionController.trialSubscription)
 router.get('/api/subscribe/plans', checkAuthMiddleware, subscriptionController.getSubscriptionPlans)

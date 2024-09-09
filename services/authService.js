@@ -28,7 +28,7 @@ async function login(params) {
         'addloginHistory',
         new LoginHistory(params.email, 'LOGIN SUCCESSFULLY')
       );
-      const token = generateToken(currentUser.Id);
+      const token = generateToken(currentUser.id);
       return {
         status: 200,
         message: 'Login Successful',
