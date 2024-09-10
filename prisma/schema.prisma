@@ -108,6 +108,7 @@ model WebhookLog{
   id   Int @id @default(autoincrement()) 
   payload String?
   event String?
-   @@map("WebhookLogs")
+  createdAt DateTime @default(now())
+  @@map("WebhookLogs")
 }
 

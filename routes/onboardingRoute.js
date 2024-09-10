@@ -7,6 +7,7 @@ const recommendationController = require("../controllers/recommendationControlle
 const subscriptionController = require("../controllers/subscriptionController");
 const profileController = require('../controllers/profileController')
 const planController = require('../controllers/planController')
+const webhookController = require('../controllers/webhookController')
 
 router.post('/api/onboarding/profile', onboardingController.profile);
 router.post('/api/onboarding/verify/email', onboardingController.verifyEmail);
@@ -30,6 +31,8 @@ router.put('/api/profile/updateLanguageAndTimeZone', checkAuthMiddleware, profil
 
 router.get('/api/profile/planSettings', checkAuthMiddleware, planController.getSettings)
 router.put('/api/profile/planSettings', checkAuthMiddleware, planController.editSettings)
+
+router.post('/api/webhook', webhookController.logWebhookEvent)
 
 
 
