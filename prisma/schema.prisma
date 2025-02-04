@@ -112,3 +112,24 @@ model WebhookLog{
   @@map("WebhookLogs")
 }
 
+model OtpModel {
+  id               Int      @id @default(autoincrement())  // Auto-incremented ID
+  otp              String   // The OTP value (hashed)
+  identifier       String   // The identifier for the OTP (e.g., user identifier or session)
+  isUsed           Boolean  @default(false) // Whether the OTP has been used
+  dateCreatedUtc   String   // The UTC timestamp when the OTP was created (String type to store UTC string)
+  otpHeader        String   // A unique header or identifier (e.g., UUID)
+  dateToExpireUtc  String   // The expiration date for the OTP (String type to store UTC string)
+  otpType          String   // The type of OTP (e.g., SMS, email, etc.)
+  
+  @@map("Otps") // Maps this model to a table named 'OtpModels' in your database
+}
+
+
+model LoginHistory{
+  id   Int @id @default(autoincrement()) 
+  userEmail String?
+  loginAction String?
+  dateCreatedUtc DateTime @default(now())
+  @@map("LoginHistory")
+}
