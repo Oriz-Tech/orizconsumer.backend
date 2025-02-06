@@ -43,7 +43,6 @@ async function login(params) {
           token: token,
           inviteid: currentUser.inviteid,
           language: currentUser.language,
-          timezone: currentUser.timeZone
         }
       };
     } else {
