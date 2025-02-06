@@ -1,4 +1,5 @@
 const express = require('express');
+const cors = require('cors');
 require('dotenv/config');
 const swaggerUi = require('swagger-ui-express');
 const swaggerFile = require('./docs/swagger.json');
@@ -10,6 +11,7 @@ const app = express();
 const PORT = process.env.PORT;
 
 //middlewares
+app.use(cors()); 
 app.use(bodyParser.json());
 app.use(express.json()); // for parsing application/json
 app.use(express.urlencoded({ extended: true }));
