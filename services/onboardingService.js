@@ -19,47 +19,55 @@ const { Prisma, PrismaClient } = require('@prisma/client');
 const { Console } = require('console');
 
 const prisma = new PrismaClient();
+let currentDate = getCurrentDateUtc().toISOString();
 
 async function createProfile(params) {
   try {
-    let previousUser = await executeUserSqlOperation('getbyEmailOrPhonenumber', {
-      email: params.email,
-      phonenumber: params.phonenumber
+    const previousUser = await prisma.user.findFirst({
+      where: {
+        OR: [{ email: params.email }, { phonenumber: params.phonenumber }]
+      }
     });
-    logger.info(`previoususer details ${previousUser}`);
 
-    if (previousUser.recordset.length > 0) {
+    logger.info(`previous user details: ${JSON.stringify(previousUser)}`);
+    const newUser = new User();
+    newUser.profile(params.firstname, params.lastname, params.password, params.email, params.phonenumber);
+
+    if (previousUser) {
+      // Check if previousUser is not null
       return {
         status: 400,
-        message: 'An account with the email (or phonenumber) already exists',
+        message: 'An account with the email (or phone number) already exists',
         code: 'E00',
         data: null
       };
     }
-    const newUser = new User();
-    newUser.profile(
-      params.firstname,
-      params.lastname,
-      params.password.trim(),
-      params.email.trim(),
-      params.phonenumber.trim()
-    );
 
-    const creationResult = await executeUserSqlOperation('profile', newUser);
-    if (creationResult.rowsAffected.length > 0) {
-      let otpCode ='12345'// Math.floor(10000 + Math.random() * 90000).toString();
-      const otpRecord = new Otp(otpCode, newUser.phonenumber, OtpTypes.ONBOARDING);
-      await executeOtpSqlOperation('addOtp', otpRecord);
-      console.log('sending otp to phonenumber')
-      const response = await sendSMS(newUser.phonenumber, `otp to for onboarding ${otpCode}`)
-      console.log('response '+ response)
-      return {
-        status: 200,
-        message: `User account created and OTP has been sent to ${newUser.phonenumber}`,
-        code: 'S00',
-        data: { otpHeader: otpRecord.otpHeader, otp: otpCode, otpType: OtpTypes.ONBOARDING }
-      };
+    const createdUser = await prisma.user.create({
+      data: newUser.toJSON()
+    });
+
+    logger.info(`User account created: ${createdUser.firstname}`);
+
+    let otpCode = '12345'; // Math.floor(10000 + Math.random() * 90000).toString();
+
+    const otpRecord = new Otp(otpCode, params.phonenumber, OtpTypes.ONBOARDING);
+    const otpSentResult = await prisma.otpModel.create({
+      data: otpRecord.toJSON()
+    });
+    if (!otpSentResult) {
+      logger.error(`Error sending otp`);
+      return { status: 400, message: 'Error sending otp to phone number', code: 'E00', data: null };
     }
+    logger.info('sent otp to phone number' + params.phonenumber);
+    //const response = await sendSMS(newUser.phonenumber, `otp to for onboarding ${otpCode}`);
+    //console.log('response ' + response);
+    return {
+      status: 200,
+      message: `User account created and OTP has been sent to ${params.phonenumber}`,
+      code: 'S00',
+      data: { otpHeader: otpRecord.otpHeader, otp: otpCode, otpType: OtpTypes.ONBOARDING }
+    };
   } catch (err) {
     logger.error(`Error occured while creating user ${err}`);
     return { status: 500, message: 'Internal server error', code: 'E00', data: null };
@@ -68,104 +76,151 @@ async function createProfile(params) {
 
 async function verifyProfileEmail(params) {
   try {
-    var request = {
-      identifier: params.identifier,
-      otpHeader: params.otpHeader,
-      otpType: params.otpType,
-      otp: params.otp
-    };
-    const userRecord = await executeUserSqlOperation('getbyEmail', { email: params.identifier });
-    if (userRecord.recordset.length == 0) {
+    const user = await prisma.user.findFirst({
+      where: {
+        email: params.identifier
+      }
+    });
+    if (!user) {
       return { status: 400, message: 'Invalid user email', code: 'E00', data: null };
     }
-    let otpRecords = await executeOtpSqlOperation('getOtp', request);
 
-    if (otpRecords.recordset.length == 0) {
-      return { status: 400, message: 'Invalid Otp', code: 'E00', data: null };
-    }
-
-    var otpRecord = otpRecords.recordset[0];
-    let otpHash = otpRecord.Otp;
-
-    if (!comparePassword(request.otp, otpHash)) {
-      return { status: 400, message: 'Invalid Otp', code: 'E00', data: null };
-    }
-
-    const updateRequest = await executeOtpSqlOperation('setToUsed', request);
-    if (updateRequest.rowsAffected > 0) {
-      const creationResult = await executeUserSqlOperation('verifyEmail', {
-        email: params.identifier
-      });
-      if (creationResult.rowsAffected.length > 0) {
-        const token = generateToken(userRecord.recordset[0].Id);
-        return {
-          status: 200,
-          message: 'User Account successfully verified',
-          code: 'S00',
-          data: { token: token }
-        };
+    const otpRecord = await prisma.otpModel.findFirst({
+      where: {
+        AND: [
+          { identifier: params.identifier },
+          { otpHeader: params.otpHeader },
+          { isUsed: false },
+          { otpType: params.otpType }
+        ]
       }
+    });
+
+    if (!otpRecord) {
+      return { status: 400, message: 'Invalid OTP', code: 'E00', data: null };
     }
+
+    if (new Date(otpRecord.dateToExpireUtc).getTime() < new Date().getTime()) {
+      return { status: 400, message: 'Otp has expired', code: 'E00', data: null };
+    }
+
+    if (!comparePassword(params.otp, otpRecord.otp)) {
+      return { status: 400, message: 'Invalid OTP', code: 'E00', data: null };
+    }
+
+    await prisma.otpModel.update({
+      where: {
+        id: otpRecord.id
+      },
+      data: {
+        isUsed: true
+      }
+    });
+    const verifyEmailResult = await prisma.user.update({
+      where: {
+        id: user.id
+      },
+      data: {
+        isemailverified: true
+      }
+    });
+
+    if (!verifyEmailResult) {
+      return {
+        status: 400,
+        message: 'Error completing this action. Kindly try again',
+        code: 'E00',
+        data: null
+      };
+    }
+    const token = generateToken(user.id);
+    return {
+      status: 200,
+      message: 'User Account successfully verified',
+      code: 'S00',
+      data: { token: token }
+    };
   } catch (error) {
-    logger.error(`Error occured while creating user ${err}`);
+    logger.error(`Error occured while creating user ${error}`);
     return { status: 500, message: 'Internal server error', code: 'E00', data: null };
   }
 }
 
 async function verifyProfilePhonenumber(params) {
   try {
-    var request = {
-      identifier: params.identifier,
-      otpHeader: params.otpHeader,
-      otpType: params.otpType,
-      otp: params.otp
-    };
-    const userRecord = await executeUserSqlOperation('getbyPhone', {
-      phonenumber: params.identifier
+    const userRecord = await prisma.user.findFirst({
+      where: {
+        phonenumber: params.identifier
+      }
     });
-    if (userRecord.recordset.length == 0) {
+
+    if (!userRecord) {
       return { status: 400, message: 'Invalid user phonenumber', code: 'E00', data: null };
     }
-    const userEmail = userRecord.recordset[0].Email;
-    let otpRecords = await executeOtpSqlOperation('getOtp', request);
-
-    if (otpRecords.recordset.length == 0) {
-      return { status: 400, message: 'Invalid Otp', code: 'E00', data: null };
-    }
-
-    var otpRecord = otpRecords.recordset[0];
-    let otpHash = otpRecord.Otp;
-
-    if (!comparePassword(request.otp, otpHash)) {
-      return { status: 400, message: 'Invalid Otp', code: 'E00', data: null };
-    }
-
-    const updateRequest = await executeOtpSqlOperation('setToUsed', request);
-    if (updateRequest.rowsAffected > 0) {
-      const creationResult = await executeUserSqlOperation('verifyPhone', {
-        phonenumber: params.identifier
-      });
-      if (creationResult.rowsAffected.length > 0) {
-        let otpCode ='12345'// Math.floor(10000 + Math.random() * 90000).toString();
-        const otpRecord = new Otp(otpCode, userEmail, OtpTypes.ONBOARDING);
-        await executeOtpSqlOperation('addOtp', otpRecord);
-        
-        console.log('sending email')
-        const sendingEmailResponse = await sendEmail(userEmail, 'Oriz Health - Onboarding Otp', 
-          `Use the Otp ${otpCode}`)
-        
-        console.log(sendingEmailResponse);
-
-        return {
-          status: 200,
-          message: `User account created and OTP has been sent to ${userEmail}`,
-          code: 'S00',
-          data: { otpHeader: otpRecord.otpHeader, otp: otpCode, otpType: OtpTypes.ONBOARDING }
-        };
+    let otpRecord = await prisma.otpModel.findFirst({
+      where: {
+        AND: [{ identifier: params.identifier }, { otpHeader: params.otpHeader }, { isUsed: false }]
       }
+    });
+    if (!otpRecord) {
+      return { status: 400, message: 'Invalid Otp', code: 'E00', data: null };
     }
+
+    if (new Date(otpRecord.dateToExpireUtc).getTime() < new Date().getTime()) {
+      return { status: 400, message: 'Otp has expired', code: 'E00', data: null };
+    }
+
+    if (!comparePassword(params.otp, otpRecord.otp)) {
+      return { status: 400, message: 'Invalid Otp', code: 'E00', data: null };
+    }
+
+    const savedResult = await prisma.otpModel.update({
+      where: {
+        id: otpRecord.id
+      },
+      data: {
+        isUsed: true
+      }
+    });
+    const verifyPhoneResult = await prisma.user.update({
+      where: {
+        id: userRecord.id
+      },
+      data: {
+        isPhonenumberVerified: true
+      }
+    });
+
+    if (!verifyPhoneResult) {
+      return {
+        status: 400,
+        message: 'Error completing this action. Kindly try again',
+        code: 'E00',
+        data: null
+      };
+    }
+
+    let otpCode = '12345'; // Math.floor(10000 + Math.random() * 90000).toString();
+    const emailotpRecord = new Otp(otpCode, userRecord.email, OtpTypes.ONBOARDING);
+    const emailOtpSentResult = await prisma.otpModel.create({
+      data: emailotpRecord.toJSON()
+    });
+
+    logger.info('sending email');
+    // const sendingEmailResponse = await sendEmail(
+    //   userEmail,
+    //   'Oriz Health - Onboarding Otp',
+    //   `Use the Otp ${otpCode}`
+    // );
+
+    return {
+      status: 200,
+      message: `User account created and OTP has been sent to ${userRecord.email}`,
+      code: 'S00',
+      data: { otpHeader: emailotpRecord.otpHeader, otp: otpCode, otpType: OtpTypes.ONBOARDING }
+    };
   } catch (error) {
-    logger.error(`Error occured while creating user ${err}`);
+    logger.error(`Error occured while creating user ${error}`);
     return { status: 500, message: 'Internal server error', code: 'E00', data: null };
   }
 }
@@ -176,7 +231,7 @@ async function setProfileUserName(params) {
       username: params.username
     }
   });
-  if (user == null) {
+  if (!user) {
     const updatedUser = await prisma.user.update({
       where: {
         id: params.userId

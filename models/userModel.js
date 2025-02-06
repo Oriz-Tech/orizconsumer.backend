@@ -37,6 +37,17 @@ class User {
     this.dateupdatedutc = new Date();
     this.lastaction = 'SET USERNAME';
   }
+
+  toJSON() {
+    return {
+      firstname: this.firstname,
+      lastname: this.lastname,
+      password: this.password,
+      email: this.email,
+      phonenumber: this.phonenumber,
+      lastaction: this.lastaction
+    };
+  }
 }
 
 module.exports = User;

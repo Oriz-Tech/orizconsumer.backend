@@ -6,18 +6,17 @@
 
 generator client {
   provider = "prisma-client-js"
-  binaryTargets = ["native", "debian-openssl-3.0.x"]
 }
 
 datasource db {
-  provider = "sqlserver"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
 
 model User {
   id                   Int      @id @default(autoincrement())
-  username             String
+  username             String?
   firstname            String
   lastname             String
   password             String
@@ -25,7 +24,7 @@ model User {
   datecreatedutc       DateTime @default(now())
   dateupdatedutc       DateTime @updatedAt
   lastaction           String?
-  phonenumber          String
+  phonenumber          String   @unique
   isverified           Boolean?  @default(false)
   isemailverified      Boolean?  @default(false)
   isPhonenumberVerified Boolean?  @default(false)
@@ -47,7 +46,7 @@ model UserPlan {
   updatedAt    DateTime @updatedAt
   day          String   @db.VarChar(10)
   mealPlan     String   @db.VarChar(1000)
-  fitnessPlan  String   @db.NVarChar(500)
+  fitnessPlan  String   @db.VarChar(500)
   isDone       Boolean  @default(false)
   user         User     @relation(fields: [userId], references: [id])
   userId       Int
@@ -120,7 +119,7 @@ model OtpModel {
   dateCreatedUtc   String   // The UTC timestamp when the OTP was created (String type to store UTC string)
   otpHeader        String   // A unique header or identifier (e.g., UUID)
   dateToExpireUtc  String   // The expiration date for the OTP (String type to store UTC string)
-  otpType          String   // The type of OTP (e.g., SMS, email, etc.)
+  otpType          Int   // The type of OTP (e.g., SMS, email, etc.)
   
   @@map("Otps") // Maps this model to a table named 'OtpModels' in your database
 }
