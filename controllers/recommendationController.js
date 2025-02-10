@@ -1,5 +1,5 @@
 const logger = require('../config/loggerConfig');
-const { generate_plan, get_ai_recommendation, complete_plan_items } = require('../services/recommendationService');
+const { generate_plan, get_ai_recommendation, complete_plan_items, generate_plan_openai } = require('../services/recommendationService');
 
 const generatePlan = async(req, res) => {
     try {
