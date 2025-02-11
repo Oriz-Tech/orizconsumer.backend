@@ -40,7 +40,7 @@ async function generate_plan_openai(params){
         "type": "object",
         "properties": {
             "day": { "type": "string" },
-            "mealPlan": { "type": "string" },
+            "mealPlan": { "type": "object", "properties": {"breakfast"} },
             "fitnessPlan":{ "type": "string" },
             "isDone": {"type":"boolean"},
             "userId": ${userId},
@@ -81,9 +81,24 @@ async function generate_plan(params){
         "type": "object",
         "properties": {
             "day": { "type": "string" },
-            "mealPlan": { "type": "string" },
-            "fitnessPlan":{ "type": "string" },
-            "isDone": {"type":"boolean"},
+            "mealPlan": { 
+              "type": "object", 
+              "properties": {
+                "breakfast": {"type": "string"},
+                "lunch": {"type": "string"},
+                "dinner": {"type": "string"}
+              } 
+            },
+            "fitnessPlan": { 
+              "type": "object", 
+              "properties": {
+                "morning": {"type": "string"},
+                "afternoon": {"type": "string"},
+                "evening": {"type": "string"},
+              } 
+            },
+            "isMealPlanDone": {"type":"boolean"}
+            "isFitnessPlanDone": {"type":"boolean"}
             "userId": ${userId},
             "planCorrelationId": ${planCorrelationId}, 
             "isActive": ${true}
@@ -92,42 +107,43 @@ async function generate_plan(params){
 
     console.log(prompt);
 
-    // const result = await model.generateContent(prompt);
-    // const response = await result.response;
-    // const text = response.text();
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text();
     
-    // let startIndex = text.indexOf('[');
-    // let endIndex = text.lastIndexOf(']');
-    // let jsonContent = text.substring(startIndex, endIndex+1).trim();
+    let startIndex = text.indexOf('[');
+    let endIndex = text.lastIndexOf(']');
+    let jsonContent = text.substring(startIndex, endIndex+1).trim();
 
-    // let data = JSON.parse(jsonContent)
-    // const addedResult = await prisma.userPlan.createMany({
-    //     data:data
-    // })
+    let data = JSON.parse(jsonContent)
+    console.log(data)
+    const addedResult = await prisma.userPlan.createMany({
+        data:data
+    })
 
-    // //save request 
-    // let request = {
-    //     "typeOfWork":params.typeOfWork,
-    //     "occupation":params.occupation,
-    //     "dailyRoutine": params.dailyRoutine,
-    //     "weightGoal":params.weightGoal,
-    //     "hasMedicationCondition": params.hasMedicationCondition, 
-    //     "medicalCondition":params.medicalCondition,
-    //     "hasDietaryRestriction":params.hasDietaryRestriction,
-    //     "dietaryRestriction": params.dietaryRestriction,
-    //     "weight":params.weight,
-    //     "height":params.height,
-    //     "enjoyedActivity": params.enjoyedActivity,
-    //     "daysPerWeek": params.daysPerWeek,
-    //     "hoursPerDay":params.hoursPerDayForFitness,
-    //     "sleepingHours":params.sleepingHours,
-    //     "userId": userId,
-    //     "planCorrelationId": planCorrelationId,
-    // }
+    //save request 
+    let request = {
+        "typeOfWork":params.typeOfWork,
+        "occupation":params.occupation,
+        "dailyRoutine": params.dailyRoutine,
+        "weightGoal":params.weightGoal,
+        "hasMedicationCondition": params.hasMedicationCondition, 
+        "medicalCondition":params.medicalCondition,
+        "hasDietaryRestriction":params.hasDietaryRestriction,
+        "dietaryRestriction": params.dietaryRestriction,
+        "weight":params.weight,
+        "height":params.height,
+        "enjoyedActivity": params.enjoyedActivity,
+        "daysPerWeek": params.daysPerWeek,
+        "hoursPerDay":params.hoursPerDayForFitness,
+        "sleepingHours":params.sleepingHours,
+        "userId": userId,
+        "planCorrelationId": planCorrelationId,
+    }
 
-    // const requestResult = await prisma.userPlanSettings.create({
-    //     data: request
-    // })
+    const requestResult = await prisma.userPlanSettings.create({
+        data: request
+    })
 
 
     return {

@@ -45,9 +45,10 @@ model UserPlan {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   day          String   @db.VarChar(10)
-  mealPlan     String   @db.VarChar(1000)
-  fitnessPlan  String   @db.VarChar(500)
-  isDone       Boolean  @default(false)
+  mealPlan     Json     
+  fitnessPlan  Json   
+  isMealPlanDone       Boolean  @default(false)
+  isFitnessPlanDone       Boolean  @default(false)
   user         User     @relation(fields: [userId], references: [id])
   userId       Int
   planCorrelationId String?
