@@ -434,7 +434,15 @@ async function get_ai_recommendation(params) {
       }
     }
   });
-  //console.log(data)
+
+  if(!result){
+    return {
+      status: 200,
+      message: 'Success',
+      code: 'S00',
+      data: {}
+    };
+  }
 
   const data = {
     ...result,

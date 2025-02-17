@@ -28,7 +28,7 @@ const getAiRecommendation = async(req, res) => {
       const result = await get_ai_recommendation(req.body);
       res.status(result.status).json(result);
     } catch (error) {
-      logger.error(`{generatePlan user request: ${req.body}} failed with error ${error}`);
+      logger.error(`{getAiRecommendation user request: ${req.body}} failed with error ${error}`);
       res.status(error.status || 500).json({
         status: 500,
         message: 'Sorry, an error occured',
