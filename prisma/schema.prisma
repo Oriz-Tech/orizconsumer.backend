@@ -30,12 +30,15 @@ model User {
   isPhonenumberVerified Boolean?  @default(false)
   plans                UserPlan[]
   userplansettings    UserPlanSettings[]
+  userRecommendationPlans UserRecommendationPlan[]
+  userWeeklyRecommendationPlan UserWeeklyRecommendationPlan[]
   dateOfBirth         DateTime?
   gender              String?
   inviteid            String?
   referalnumbers      Int?
   language            String?
   timeZone            String?
+  hasActivePlan       Boolean?
 
   @@map("Users")
 }
@@ -56,6 +59,51 @@ model UserPlan {
 
   @@map("UserPlans")
 }
+
+model UserRecommendationPlan{
+  id           BigInt      @id @default(autoincrement())
+  createdAt    DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id])
+  userId       Int
+
+  dailyPlanId String?
+  weeklyPlanId String?
+  numberOfActivities Int @default(0)
+  activitiesCompleted Int @default(0)
+  pointsGained Int @default(0)
+  totalPoints Int @default(0)
+  mealPlan Json?
+  fitnessPlan Json? 
+  isActive Boolean @default(false)
+  dateCreatedFor DateTime
+
+  @@index([dateCreatedFor]) 
+  @@index([weeklyPlanId]) 
+  @@index([userId, dateCreatedFor])
+  @@map("UserRecommendationPlans")
+}
+
+model UserWeeklyRecommendationPlan{
+  id           BigInt      @id @default(autoincrement())
+  createdAt    DateTime @default(now())
+  dateUpdateAt DateTime?
+  user         User     @relation(fields: [userId], references: [id])
+  userId       Int
+
+  weeklyPlanId String?
+  activityTitle String?
+  numberOfActivities Int @default(0)
+  activitiesCompleted Int @default(0)
+  pointsGained Int @default(0)
+  totalPoints Int @default(0)
+  isActive Boolean @default(false)
+
+  startDate DateTime?
+  endDate DateTime?
+
+  @@map("UserWeeklyRecommendationPlan")
+}
+
 
 model UserSubscription{
   id            Int @id @default(autoincrement())

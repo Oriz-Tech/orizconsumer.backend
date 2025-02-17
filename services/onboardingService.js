@@ -213,6 +213,7 @@ async function verifyProfilePhonenumber(params) {
     //   `Use the Otp ${otpCode}`
     // );
 
+
     return {
       status: 200,
       message: `User account created and OTP has been sent to ${userRecord.email}`,

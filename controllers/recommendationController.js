@@ -1,5 +1,5 @@
 const logger = require('../config/loggerConfig');
-const { generate_plan, get_ai_recommendation, complete_plan_items, generate_plan_openai } = require('../services/recommendationService');
+const { generate_plan, get_ai_recommendation, complete_plan_items, generate_plan_v2 } = require('../services/recommendationService');
 
 const generatePlan = async(req, res) => {
     try {
@@ -24,6 +24,7 @@ const getAiRecommendation = async(req, res) => {
       logger.info(`{getAiRecommendation user request: ${req.body}}`);
       req.body.userId = req.user.userId;
       req.body.token = req.token;
+      req.body.day = req.query.day
       const result = await get_ai_recommendation(req.body);
       res.status(result.status).json(result);
     } catch (error) {

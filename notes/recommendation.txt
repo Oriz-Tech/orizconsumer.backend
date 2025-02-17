@@ -1,0 +1,71 @@
+//daily plan 
+{
+    "userId": 1, 
+    "planId": "1234=1029-2029', 
+    "numberOfActivities": 10, 
+    "activitiesCompleted": 5, 
+    "pointsGained" : 50,
+    "totalPoints": 
+    "mealPlan" : [
+        {
+            "title" : "breakfast", 
+            "detail": "yam and eggs", 
+            "point" : 20, 
+            "isDone": false, 
+            "planDetailId": "1234-1040"
+        }
+    ],
+    "fitnessPlan" : [
+        {
+            "title" : "warm-up", 
+            "detail": "Jumping jack for 20 mins", 
+            "point" : 20, 
+            "isDone": false, 
+            "planDetailId": "1234-1040"
+        }
+    ],
+    "dateCreated": "2015-01-19",
+}
+
+
+//weekly
+[
+    {
+        "title": "week - 1", 
+        "startDate": "2025-01-01", 
+        "endDate": "2025-01-08",
+        "numberOfActivities": 10, 
+        "activitiesCompleted": 5, 
+        "pointsGained" : 50,
+        "totalPoints": 
+    }
+]
+
+on each complete id, the point gained is update. 
+
+db - userPlan 
+userId: int
+dailyplanId: string 
+weeklyplanId: string
+numberOfActivities: int
+activitiesCompleted: int
+pointsGained: int 
+totalPoints: int
+mealPlan: json
+fitnessPlan: json
+dateCreated: datetime
+isActive: bool 
+
+db - userWeeklyAnalytics
+userId: int
+datetimeUpdated: datetime
+weekNumber: int 
+numberOfActivities: 
+activitiesCompleted: int
+startDate: datetime 
+endDate: datetime
+datetimeCreated: datetime 
+weeklyId: string 
+month: string 
+year: string 
+
