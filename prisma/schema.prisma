@@ -76,6 +76,18 @@ model UserRecommendationPlan{
   fitnessPlan Json? 
   isActive Boolean @default(false)
   dateCreatedFor DateTime
+  activitySubtitle String?
+
+  mealNumberOfActivities Int @default(0)
+  mealActivitiesCompleted Int @default(0)
+  mealPointsGained Int @default(0)
+  mealTotalPoints Int @default(0)
+
+  fitnessNumberOfActivities Int @default(0)
+  fitnessActivitiesCompleted Int @default(0)
+  fitnessPointsGained Int @default(0)
+  fitnessTotalPoints Int @default(0)
+  
 
   @@index([dateCreatedFor]) 
   @@index([weeklyPlanId]) 
@@ -90,7 +102,7 @@ model UserWeeklyRecommendationPlan{
   user         User     @relation(fields: [userId], references: [id])
   userId       Int
 
-  weeklyPlanId String?
+  weeklyPlanId String
   activityTitle String?
   numberOfActivities Int @default(0)
   activitiesCompleted Int @default(0)
@@ -100,7 +112,9 @@ model UserWeeklyRecommendationPlan{
 
   startDate DateTime?
   endDate DateTime?
+  subtitle String?
 
+   @@unique([userId, weeklyPlanId, activityTitle], name: "user_id")
   @@map("UserWeeklyRecommendationPlan")
 }
 

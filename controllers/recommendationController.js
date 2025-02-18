@@ -24,7 +24,12 @@ const getAiRecommendation = async(req, res) => {
       logger.info(`{getAiRecommendation user request: ${req.body}}`);
       req.body.userId = req.user.userId;
       req.body.token = req.token;
-      req.body.day = req.query.day
+      req.body.day = req.query.day;
+      req.body.month = req.query.month;
+      req.body.week = req.query.week;
+      req.body.year=req.query.year;
+      req.body.filter = req.query.filter;
+      
       const result = await get_ai_recommendation(req.body);
       res.status(result.status).json(result);
     } catch (error) {

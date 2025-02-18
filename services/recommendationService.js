@@ -1,7 +1,7 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const { getCurrentDateUtc } = require('../common/helpers/dateTimeHelper');
 const { v4: uuidv4 } = require('uuid');
-const { startOfDay, endOfDay } = require('date-fns');
+const { startOfDay, endOfDay, getWeekOfMonth } = require('date-fns');
 
 // Access your API key as an environment variable (see "Set up your API key" above)
 const genAI = new GoogleGenerativeAI(process.env.API_KEY);
@@ -11,6 +11,7 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
 const { OpenAI } = require('openai');
+const logger = require('../config/loggerConfig');
 
 const client = new OpenAI({
   apiKey: process.env['OPENAI_API_KEY'] // This is the default and can be omitted
@@ -112,60 +113,66 @@ async function generate_plan(params) {
     };
   }
   //   let currentDate = getCurrentDateUtc().toISOString().slice(0, 19).replace('T', ' ');
-  //   let medicalCondition = 'has no medical condition';
-  //   let dietaryRestriction = 'has no dietary restriction';
+    let medicalCondition = 'has no medical condition';
+    let dietaryRestriction = 'has no dietary restriction';
 
-  //   if (params.hasMedicationCondition == true) {
-  //     medicalCondition = 'has a ' + params.medicalCondition;
-  //   }
+    if (params.hasMedicationCondition == true) {
+      medicalCondition = 'has a ' + params.medicalCondition;
+    }
 
-  //   if (params.hasDietaryRestriction == true) {
-  //     dietaryRestriction = 'is ' + params.dietaryRestriction;
-  //   }
+    if (params.hasDietaryRestriction == true) {
+      dietaryRestriction = 'is ' + params.dietaryRestriction;
+    }
 
-  //   let planCorrelationId = uuidv4();
-  //   let prompt = `Generate a meal plan and a fitness plan for someone
-  //     who is ${params.typeOfWork} "and works as a ${params.occupation}. He is an ${params.dailyRoutine} who does not go to gym,
-  //     looking to ${params.weightGoal} and ${medicalCondition}. His body weight is ${params.weight}kg and height of  ${params.height} cm
-  //     ${params.enjoyedActivity} and willing to commit ${params.daysPerWeek} days a week of ${params.hoursPerDayForFitness} hours per day to a fitness goal
-  //     and ${dietaryRestriction}. He gets ${params.sleepingHours} hours of sleep per night using this JSON Schema:
-  //     {
-  //       "type":"array",
-  //       "properties": {
-  //         "mealItem": {
-  //           "type": "object",
-  //           "properties": {
-  //             "breakfast": {"type": "string"},
-  //             "midmorning": {"type": "string"},
-  //             "lunch": {"type": "string"},
-  //             "midafternoon": {"type": "string"},
-  //             "dinner": {"type": "string"}
-  //           }
-  //         },
-  //         "fitnessItem": {
-  //           "type": "object",
-  //           "properties": {
-  //             "warmup": {"type": "string"},
-  //             "strength": {"type": "string"},
-  //             "core": {"type": "string"},
-  //             "cardio": {"type": "string"},
-  //             "cooldown": {"type": "string"}
-  //           }
-  //         },
-  //       }
-  //     }
-  // }`;
+    let planCorrelationId = uuidv4();
+    logger.info('Starting to generate the meal plan using AI ');
 
-  //   const result = await model.generateContent(prompt);
-  //   const response = await result.response;
-  //   const text = response.text();
 
-  //   let startIndex = text.indexOf('[');
-  //   let endIndex = text.lastIndexOf(']');
-  //   let jsonContent = text.substring(startIndex, endIndex + 1).trim();
+    let prompt = `Generate a meal plan and a fitness plan for someone
+      who is ${params.typeOfWork} "and works as a ${params.occupation}. He is an ${params.dailyRoutine} who does not go to gym,
+      looking to ${params.weightGoal} and ${medicalCondition}. His body weight is ${params.weight}kg and height of  ${params.height} cm
+      ${params.enjoyedActivity} and willing to commit ${params.daysPerWeek} days a week of ${params.hoursPerDayForFitness} hours per day to a fitness goal
+      and ${dietaryRestriction}. He gets ${params.sleepingHours} hours of sleep per night using this JSON Schema:
+      {
+        "type":"array",
+        "properties": {
+          "mealItem": {
+            "type": "object",
+            "properties": {
+              "breakfast": {"type": "string"},
+              "midmorning": {"type": "string"},
+              "lunch": {"type": "string"},
+              "midafternoon": {"type": "string"},
+              "dinner": {"type": "string"}
+            }
+          },
+          "fitnessItem": {
+            "type": "object",
+            "properties": {
+              "warmup": {"type": "string"},
+              "strength": {"type": "string"},
+              "core": {"type": "string"},
+              "cardio": {"type": "string"},
+              "cooldown": {"type": "string"}
+            }
+          },
+        }
+      }
+  }`;
 
-  //   let data = JSON.parse(jsonContent);
-  //   console.log(data);
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text();
+    logger.info('Completed ai model generation');
+
+    let startIndex = text.indexOf('[');
+    let endIndex = text.lastIndexOf(']');
+    let jsonContent = text.substring(startIndex, endIndex + 1).trim();
+
+    let data = JSON.parse(jsonContent);
+
+    logger.info('Parsing the data');
+    console.log(data);
   // const addedResult = await prisma.userPlan.createMany({
   //     data:data
   // })
@@ -194,92 +201,95 @@ async function generate_plan(params) {
     data: request
   });
 
-  data = [
-    {
-      mealItem: {
-        breakfast:
-          '3 whole eggs scrambled with 1/4 cup chopped vegetables and 2 slices whole-wheat toast with avocado.  Large glass of whole milk.',
-        midmorning: 'Greek yogurt (1 cup) with berries and a handful of almonds.',
-        lunch:
-          'Chicken breast salad sandwich on whole-wheat bread with mayonnaise, lettuce, tomato, and a side of sweet potato fries.',
-        midafternoon:
-          'Protein shake (whey or casein) with banana and a tablespoon of peanut butter.',
-        dinner:
-          '4oz grilled salmon, 1 cup brown rice, and 1 cup steamed broccoli.  A small serving of olive oil and balsamic vinegar dressing.'
-      },
-      fitnessItem: {
-        warmup: '10 minutes of light cardio, such as jogging in place or jumping jacks.',
-        strength:
-          '3 sets of 10-12 repetitions of the following exercises: squats, push-ups, lunges, rows (using resistance bands or water bottles), overhead press (using resistance bands or water bottles).',
-        core: '3 sets of 15-20 repetitions of the following exercises: planks, crunches, Russian twists, bicycle crunches.',
-        cardio: 'Basketball game.  Focus on both offensive and defensive play for a full 3 hours.',
-        cooldown:
-          '10 minutes of stretching, focusing on major muscle groups worked during the workout.'
-      }
-    },
-    {
-      mealItem: {
-        breakfast:
-          'Oatmeal (1 cup) with 1/4 cup of fruit and a scoop of protein powder.  Glass of whole milk.',
-        midmorning: 'Hard-boiled eggs (2) and a small apple.',
-        lunch: 'Leftover salmon and brown rice from dinner.',
-        midafternoon: 'Trail mix (nuts, seeds, dried fruit).',
-        dinner:
-          'Lean ground beef stir-fry with brown rice and mixed vegetables.  Use a minimal amount of healthy oil.'
-      },
-      fitnessItem: {
-        warmup:
-          'Dynamic stretching, such as arm circles, leg swings, and torso twists (10 minutes).',
-        strength:
-          'Repeat strength training routine from previous day, focusing on proper form and increasing weight or resistance if possible.',
-        core: 'Repeat core exercises from previous day, focusing on maintaining good form and engaging your core throughout each repetition.',
-        cardio:
-          'Basketball game.  Focus on improving your endurance and specific skills such as shooting or dribbling for 3 hours.',
-        cooldown: 'Cool-down stretching (10 minutes).'
-      }
-    },
-    {
-      mealItem: {
-        breakfast:
-          'Pancakes (2 small) made with whole wheat flour, topped with berries and a dollop of Greek yogurt.',
-        midmorning: 'Peanut butter and banana sandwich on whole wheat bread.',
-        lunch: 'Chicken breast and vegetable wrap (whole wheat tortilla).',
-        midafternoon: 'Cottage cheese (1 cup) with chopped fruit.',
-        dinner:
-          'Chicken breast, sweet potato, and green beans.  Season with herbs and spices.  Small drizzle of olive oil.'
-      },
-      fitnessItem: {
-        warmup: 'Jump rope (5 minutes) and light cardio (5 minutes).',
-        strength:
-          'Focus on plyometrics: Box jumps, jump squats, and other explosive exercises (3 sets of 8-10 repetitions).',
-        core: 'Focus on isometric holds:  Plank variations, side plank, dead bug (30 seconds hold for each, 3 repetitions).',
-        cardio: 'Basketball game.  Play a full court game for 3 hours.',
-        cooldown: 'Yoga or foam rolling (15 minutes).'
-      }
-    }
-  ];
-  numberOfDays = 3;
-  const currentDate = new Date();
-  let dataResult = generateWeeklyPlanAndAnalytics(data, currentDate, numberOfDays, userId);
+  // data = [
+  //   {
+  //     mealItem: {
+  //       breakfast:
+  //         '3 whole eggs scrambled with 1/4 cup chopped vegetables and 2 slices whole-wheat toast with avocado.  Large glass of whole milk.',
+  //       midmorning: 'Greek yogurt (1 cup) with berries and a handful of almonds.',
+  //       lunch:
+  //         'Chicken breast salad sandwich on whole-wheat bread with mayonnaise, lettuce, tomato, and a side of sweet potato fries.',
+  //       midafternoon:
+  //         'Protein shake (whey or casein) with banana and a tablespoon of peanut butter.',
+  //       dinner:
+  //         '4oz grilled salmon, 1 cup brown rice, and 1 cup steamed broccoli.  A small serving of olive oil and balsamic vinegar dressing.'
+  //     },
+  //     fitnessItem: {
+  //       warmup: '10 minutes of light cardio, such as jogging in place or jumping jacks.',
+  //       strength:
+  //         '3 sets of 10-12 repetitions of the following exercises: squats, push-ups, lunges, rows (using resistance bands or water bottles), overhead press (using resistance bands or water bottles).',
+  //       core: '3 sets of 15-20 repetitions of the following exercises: planks, crunches, Russian twists, bicycle crunches.',
+  //       cardio: 'Basketball game.  Focus on both offensive and defensive play for a full 3 hours.',
+  //       cooldown:
+  //         '10 minutes of stretching, focusing on major muscle groups worked during the workout.'
+  //     }
+  //   },
+  //   {
+  //     mealItem: {
+  //       breakfast:
+  //         'Oatmeal (1 cup) with 1/4 cup of fruit and a scoop of protein powder.  Glass of whole milk.',
+  //       midmorning: 'Hard-boiled eggs (2) and a small apple.',
+  //       lunch: 'Leftover salmon and brown rice from dinner.',
+  //       midafternoon: 'Trail mix (nuts, seeds, dried fruit).',
+  //       dinner:
+  //         'Lean ground beef stir-fry with brown rice and mixed vegetables.  Use a minimal amount of healthy oil.'
+  //     },
+  //     fitnessItem: {
+  //       warmup:
+  //         'Dynamic stretching, such as arm circles, leg swings, and torso twists (10 minutes).',
+  //       strength:
+  //         'Repeat strength training routine from previous day, focusing on proper form and increasing weight or resistance if possible.',
+  //       core: 'Repeat core exercises from previous day, focusing on maintaining good form and engaging your core throughout each repetition.',
+  //       cardio:
+  //         'Basketball game.  Focus on improving your endurance and specific skills such as shooting or dribbling for 3 hours.',
+  //       cooldown: 'Cool-down stretching (10 minutes).'
+  //     }
+  //   },
+  //   {
+  //     mealItem: {
+  //       breakfast:
+  //         'Pancakes (2 small) made with whole wheat flour, topped with berries and a dollop of Greek yogurt.',
+  //       midmorning: 'Peanut butter and banana sandwich on whole wheat bread.',
+  //       lunch: 'Chicken breast and vegetable wrap (whole wheat tortilla).',
+  //       midafternoon: 'Cottage cheese (1 cup) with chopped fruit.',
+  //       dinner:
+  //         'Chicken breast, sweet potato, and green beans.  Season with herbs and spices.  Small drizzle of olive oil.'
+  //     },
+  //     fitnessItem: {
+  //       warmup: 'Jump rope (5 minutes) and light cardio (5 minutes).',
+  //       strength:
+  //         'Focus on plyometrics: Box jumps, jump squats, and other explosive exercises (3 sets of 8-10 repetitions).',
+  //       core: 'Focus on isometric holds:  Plank variations, side plank, dead bug (30 seconds hold for each, 3 repetitions).',
+  //       cardio: 'Basketball game.  Play a full court game for 3 hours.',
+  //       cooldown: 'Yoga or foam rolling (15 minutes).'
+  //     }
+  //   }
+  // ];
+
+  let dailyPlans = []
+  let weeklyAnalytics = []
+  numberOfDays = 7;
+  let currentDate = new Date();
+  for(let wk=0; wk<4; wk++){
+    let dataResult = generateWeeklyPlanAndAnalytics(data, currentDate, numberOfDays, userId);
+    dailyPlans = dailyPlans.concat(dataResult['week'])
+    weeklyAnalytics= weeklyAnalytics.concat(dataResult['analytics'])
+    currentDate = currentDate.addDays(numberOfDays)
+
+    logger.info(`generated plans \n: ${dailyPlans.length} daily plans`)
+
+  }
+
   
-  // //generate plan for 7 days
-  // weeklyPlan = generateWeeklyPlans(data, currentDate, numberOfDays, userId);
   
-  // //create the week analytics 
-  // const mealPlan = weeklyPlan.map
-  // const weekAnalytics = {
-  //   userId: userId, 
-  //   weeklyPlanId: weeklyPlan[0].weeklyPlanId,
-  //   activityTitle: 'mealPlan',
-  //   numberOfActivities
-  // }
+  
 
   try {
-    const addedResult = await prisma.UserRecommendationPlan.createMany({
-      data: dataResult['week']
+    const addedResult = await prisma.userRecommendationPlan.createMany({
+      data: dailyPlans
     });
     const addedAnalytics = await prisma.userWeeklyRecommendationPlan.createMany({
-      data: dataResult['analytics']
+      data: weeklyAnalytics
     })
     const updateUser = await prisma.user.update({
       where:{
@@ -303,7 +313,7 @@ async function generate_plan(params) {
     status: 200,
     message: 'Success',
     code: 'S00',
-    data: dataResult
+    data: null
   };
 }
 
@@ -345,7 +355,8 @@ function generateWeeklyPlanAndAnalytics(data, startDate, numberOfDays, userId) {
      totalPoints: mealPlanTotalPoints,
      isActive: true,
      startDate: weeklyPlan[0].dateCreatedFor,
-     endDate: weeklyPlan[weeklyPlan.length-1].dateCreatedFor
+     endDate: weeklyPlan[weeklyPlan.length-1].dateCreatedFor,
+     subtitle: ''
    }, {
     userId: userId, 
     weeklyPlanId: weeklyPlan[0].weeklyPlanId,
@@ -356,7 +367,8 @@ function generateWeeklyPlanAndAnalytics(data, startDate, numberOfDays, userId) {
     totalPoints: fitnessPlanTotalPoints,
     isActive: true,
     startDate: weeklyPlan[0].dateCreatedFor,
-    endDate: weeklyPlan[weeklyPlan.length-1].dateCreatedFor
+    endDate: weeklyPlan[weeklyPlan.length-1].dateCreatedFor,
+    subtitle:''
   })
 
 
@@ -415,27 +427,129 @@ function generateWeeklyPlans(data, startDate, numberOfDays, userId) {
       mealPlan: dailyMealPlan,
       fitnessPlan: dailyFitnessPlan,
       isActive: true,
-      dateCreatedFor: startDate.addDays(day)
+      dateCreatedFor: startDate.addDays(day),
+
+      mealNumberOfActivities: dailyMealPlan.length,
+      mealTotalPoints: dailyMealPlan.reduce((sum, item) => sum + (item.point || 0), 0),
+
+      fitnessNumberOfActivities:  dailyFitnessPlan.length,
+      fitnessTotalPoints: dailyFitnessPlan.reduce((sum, item) => sum + (item.point || 0), 0)
     });
   }
   return weeklyPlan;
 }
+
 async function get_ai_recommendation(params) {
   let userId = params.userId;
+  let data = null;
 
-  const start = startOfDay(new Date(params.day)); // Start of the day
-  const end = endOfDay(new Date(params.day));
-  const result = await prisma.userRecommendationPlan.findFirst({
-    where: {
-      userId: userId,
-      dateCreatedFor: {
-        gte: start, // Greater than or equal to the start of the day
-        lte: end // Less than or equal to the end of the day
+  switch (params.filter) {
+    case 'day':
+      if (params.day && params.month && params.year) {
+        params.day = `${params.year}-${params.month}-${params.day}`
+        const start = startOfDay(new Date(params.day)); // Start of the day
+        const end = endOfDay(new Date(params.day));
+        result = await prisma.userRecommendationPlan.findFirst({
+          where: {
+            userId: userId,
+            dateCreatedFor: {
+              gte: start, // Greater than or equal to the start of the day
+              lte: end // Less than or equal to the end of the day
+            }
+          }
+        });
       }
-    }
-  });
+      if(result){
+        data = {
+          ...result,
+          id: result.id.toString() // Convert BigInt to string
+        };
+      }
+      break;
+    
+    case 'month':
+      if(params.month && params.year){
+        const startOfMonth = new Date(params.year, params.month-1, 1); // month is 1-based, but JavaScript Date is 0-based
+        const endOfMonth = new Date(params.year, params.month, 1)
 
-  if(!result){
+        result = await prisma.userWeeklyRecommendationPlan.findMany({
+          where:{
+            userId: userId,
+            startDate: {
+              gte: startOfMonth, // Greater than or equal to the start of the day
+              lte: endOfMonth // Less than or equal to the end of the day
+            }
+          }
+        })
+        if(result){
+          data = result.reduce((acc, item) => {
+            const startDate = new Date(item.startDate);
+            const weekOfMonth = getWeekOfMonth(startDate);
+            item.weekOfMonth = weekOfMonth;
+            if (!acc[item.activityTitle]) {
+              acc[item.activityTitle] = [];
+            }
+            acc[item.activityTitle].push(item);
+            return acc;
+          }, {});
+      }
+      }
+      break;
+
+    case 'week':
+      if(params.week){
+
+        result = await prisma.userRecommendationPlan.findMany({
+          where:{
+            userId: userId,
+            weeklyPlanId: params.week
+          },
+          select:{
+            dateCreatedFor: true, 
+            dailyPlanId:true, 
+            weeklyPlanId: true,
+            fitnessActivitiesCompleted:true, 
+            fitnessNumberOfActivities:true, 
+            fitnessPointsGained:true, 
+            fitnessTotalPoints: true, 
+            mealActivitiesCompleted:true, 
+            mealNumberOfActivities:true, 
+            mealPointsGained:true, 
+            mealTotalPoints: true,     
+          }
+        })
+        if(result){
+          data = {
+            "mealPlan": result.map(({ fitnessActivitiesCompleted, fitnessNumberOfActivities,
+              fitnessPointsGained, fitnessTotalPoints, ...rest }) => rest),
+            "fitnesPlan": result.map(({ mealNumberOfActivities, mealActivitiesCompleted,
+              mealTotalPoints, mealPointsGained , ...rest }) => rest)
+          }
+        }
+      }
+      break;
+
+    default:
+      return {
+        status: 200,
+        message: 'Success',
+        code: 'S00',
+        data: {}
+      };
+      break;
+  }
+  
+
+  
+  function serializeBigInt(obj) {
+    return JSON.parse(
+      JSON.stringify(obj, (key, value) =>
+        typeof value === 'bigint' ? value.toString() : value
+      )
+    );
+  }
+  
+  if (!data) {
     return {
       status: 200,
       message: 'Success',
@@ -444,30 +558,23 @@ async function get_ai_recommendation(params) {
     };
   }
 
-  const data = {
-    ...result,
-    id: result.id.toString() // Convert BigInt to string
-  };
-
-  
   return {
     status: 200,
     message: 'Success',
     code: 'S00',
-    data: data
+    data: serializeBigInt(data)
   };
 }
 
 async function complete_plan_items(params) {
   try {
-    const plan_item = await prisma.userPlan.update({
+    let dailyplanId = params.planDetailIds[0].split('-').slice(0,-2).join('-');
+    let weekId = null;
+
+    let plan_item = await prisma.userRecommendationPlan.findFirst({
       where: {
-        id: params.planId,
+        dailyPlanId: dailyplanId,
         userId: params.userId
-      },
-      data: {
-        isDone: true,
-        updatedAt: getCurrentDateUtc()
       }
     });
     if (plan_item == null) {
@@ -478,6 +585,82 @@ async function complete_plan_items(params) {
         data: null
       };
     }
+
+    plan_item.mealPlan.forEach(element => {
+      if(params.planDetailIds.includes(element.planDetailId)){
+        console.log(element.isDone)
+        if(!element.isDone){
+          element.isDone = true;
+          plan_item.mealPointsGained += element.point;
+          plan_item.mealActivitiesCompleted +=1;
+          plan_item.activitiesCompleted +=1;
+          plan_item.pointsGained += element.point;
+        }
+      }
+    });
+
+    plan_item.fitnessPlan.forEach(element => {
+      if(params.planDetailIds.includes(element.planDetailId)){
+        if(!element.isDone){
+          element.isDone = true;
+          plan_item.fitnessPointsGained += element.point;
+          plan_item.fitnessActivitiesCompleted +=1;
+          plan_item.activitiesCompleted +=1;
+          plan_item.pointsGained += element.point;
+        }
+      }
+    });
+
+    try {
+      const updatePlanItem = await prisma.userRecommendationPlan.update({
+        where:{
+          id: plan_item.id
+        },
+        data:plan_item
+      })
+
+      const weeklyMealPlan = await prisma.userWeeklyRecommendationPlan.update({
+        where:{
+          user_id:{
+            weeklyPlanId: plan_item.weeklyPlanId, 
+            userId: params.userId,
+            activityTitle: 'mealPlan'
+          }
+        }, 
+        data:{
+          activitiesCompleted: plan_item.mealActivitiesCompleted,
+          pointsGained: plan_item.pointsGained,
+          dateUpdateAt: new Date()
+        }
+
+      })
+
+      const weeklyFitnessPlan = await prisma.userWeeklyRecommendationPlan.update({
+        where:{
+          user_id:{
+            weeklyPlanId: plan_item.weeklyPlanId, 
+            userId: params.userId,
+            activityTitle: 'fitnessPlan'
+          }
+        }, 
+        data:{
+          activitiesCompleted: plan_item.mealActivitiesCompleted,
+          pointsGained: plan_item.pointsGained,
+          dateUpdateAt: new Date()
+        }
+
+      })
+    } catch (error) {
+      console.log(error)
+      return {
+        status: 400,
+        message: 'Error while trying to complete items',
+        code: 'E00',
+        data: null
+      };
+    }
+
+
     return {
       status: 200,
       message: 'Plan item completed',
