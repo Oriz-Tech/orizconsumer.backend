@@ -43,6 +43,7 @@ async function createProfile(params) {
       };
     }
 
+    
     const createdUser = await prisma.user.create({
       data: newUser.toJSON()
     });
@@ -233,6 +234,7 @@ async function setProfileUserName(params) {
     }
   });
   if (!user) {
+    let nextBillingDate = new Date(getCurrentDateUtc().setDate(getCurrentDateUtc().getDate() + 7));
     const updatedUser = await prisma.user.update({
       where: {
         id: params.userId
@@ -241,9 +243,23 @@ async function setProfileUserName(params) {
         username: params.username,
         inviteid: generateReferalLink(),
         lastaction: 'SET USERNAME',
-        dateupdatedutc: getCurrentDateUtc()
+        dateupdatedutc: getCurrentDateUtc(),
+        isTrialSubscription: true, 
+        dateTrialEnd: nextBillingDate,
+        subscriptionType: 0
       }
     });
+
+    await prisma.userSubscription.create({
+      data: {
+        userId: params.userId,
+        subscriptionType: 0,
+        lastAction: 'TRIAL SUBSCRIPTION',
+        nextBillingDate: nextBillingDate,
+        isActive: true
+      }
+    });
+    
     return {
       status: 200,
       message: 'Username has been successfully set',

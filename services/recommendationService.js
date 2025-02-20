@@ -201,71 +201,6 @@ async function generate_plan(params) {
     data: request
   });
 
-  // data = [
-  //   {
-  //     mealItem: {
-  //       breakfast:
-  //         '3 whole eggs scrambled with 1/4 cup chopped vegetables and 2 slices whole-wheat toast with avocado.  Large glass of whole milk.',
-  //       midmorning: 'Greek yogurt (1 cup) with berries and a handful of almonds.',
-  //       lunch:
-  //         'Chicken breast salad sandwich on whole-wheat bread with mayonnaise, lettuce, tomato, and a side of sweet potato fries.',
-  //       midafternoon:
-  //         'Protein shake (whey or casein) with banana and a tablespoon of peanut butter.',
-  //       dinner:
-  //         '4oz grilled salmon, 1 cup brown rice, and 1 cup steamed broccoli.  A small serving of olive oil and balsamic vinegar dressing.'
-  //     },
-  //     fitnessItem: {
-  //       warmup: '10 minutes of light cardio, such as jogging in place or jumping jacks.',
-  //       strength:
-  //         '3 sets of 10-12 repetitions of the following exercises: squats, push-ups, lunges, rows (using resistance bands or water bottles), overhead press (using resistance bands or water bottles).',
-  //       core: '3 sets of 15-20 repetitions of the following exercises: planks, crunches, Russian twists, bicycle crunches.',
-  //       cardio: 'Basketball game.  Focus on both offensive and defensive play for a full 3 hours.',
-  //       cooldown:
-  //         '10 minutes of stretching, focusing on major muscle groups worked during the workout.'
-  //     }
-  //   },
-  //   {
-  //     mealItem: {
-  //       breakfast:
-  //         'Oatmeal (1 cup) with 1/4 cup of fruit and a scoop of protein powder.  Glass of whole milk.',
-  //       midmorning: 'Hard-boiled eggs (2) and a small apple.',
-  //       lunch: 'Leftover salmon and brown rice from dinner.',
-  //       midafternoon: 'Trail mix (nuts, seeds, dried fruit).',
-  //       dinner:
-  //         'Lean ground beef stir-fry with brown rice and mixed vegetables.  Use a minimal amount of healthy oil.'
-  //     },
-  //     fitnessItem: {
-  //       warmup:
-  //         'Dynamic stretching, such as arm circles, leg swings, and torso twists (10 minutes).',
-  //       strength:
-  //         'Repeat strength training routine from previous day, focusing on proper form and increasing weight or resistance if possible.',
-  //       core: 'Repeat core exercises from previous day, focusing on maintaining good form and engaging your core throughout each repetition.',
-  //       cardio:
-  //         'Basketball game.  Focus on improving your endurance and specific skills such as shooting or dribbling for 3 hours.',
-  //       cooldown: 'Cool-down stretching (10 minutes).'
-  //     }
-  //   },
-  //   {
-  //     mealItem: {
-  //       breakfast:
-  //         'Pancakes (2 small) made with whole wheat flour, topped with berries and a dollop of Greek yogurt.',
-  //       midmorning: 'Peanut butter and banana sandwich on whole wheat bread.',
-  //       lunch: 'Chicken breast and vegetable wrap (whole wheat tortilla).',
-  //       midafternoon: 'Cottage cheese (1 cup) with chopped fruit.',
-  //       dinner:
-  //         'Chicken breast, sweet potato, and green beans.  Season with herbs and spices.  Small drizzle of olive oil.'
-  //     },
-  //     fitnessItem: {
-  //       warmup: 'Jump rope (5 minutes) and light cardio (5 minutes).',
-  //       strength:
-  //         'Focus on plyometrics: Box jumps, jump squats, and other explosive exercises (3 sets of 8-10 repetitions).',
-  //       core: 'Focus on isometric holds:  Plank variations, side plank, dead bug (30 seconds hold for each, 3 repetitions).',
-  //       cardio: 'Basketball game.  Play a full court game for 3 hours.',
-  //       cooldown: 'Yoga or foam rolling (15 minutes).'
-  //     }
-  //   }
-  // ];
-
   let dailyPlans = []
   let weeklyAnalytics = []
   numberOfDays = 7;
@@ -279,10 +214,6 @@ async function generate_plan(params) {
     logger.info(`generated plans \n: ${dailyPlans.length} daily plans`)
 
   }
-
-  
-  
-  
 
   try {
     const addedResult = await prisma.userRecommendationPlan.createMany({

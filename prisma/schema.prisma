@@ -38,7 +38,12 @@ model User {
   referalnumbers      Int?
   language            String?
   timeZone            String?
-  hasActivePlan       Boolean?
+
+
+  subscriptionType Int @default(0)
+  isTrialSubscription Boolean @default(true)
+  dateTrialEnd DateTime?
+  lastSubscriptionDate DateTime?
 
   @@map("Users")
 }

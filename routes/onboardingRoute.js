@@ -20,8 +20,9 @@ router.post('/api/recommendation/generateplan', checkAuthMiddleware, recommendat
 router.get('/api/recommendation/plan', checkAuthMiddleware, recommendationController.getAiRecommendation)
 router.put('/api/recommendation/plan', checkAuthMiddleware, recommendationController.completePlanItems)
 
-router.post('/api/subscribe/trial', checkAuthMiddleware, subscriptionController.trialSubscription)
+//router.post('/api/subscribe/trial', checkAuthMiddleware, subscriptionController.trialSubscription)
 router.get('/api/subscribe/plans', checkAuthMiddleware, subscriptionController.getSubscriptionPlans)
+router.post('/api/subscribe/plan', checkAuthMiddleware, subscriptionController.subcribeToAPlan)
 
 
 router.get('/api/profile', checkAuthMiddleware, profileController.getProfile)
