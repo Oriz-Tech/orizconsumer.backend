@@ -4,7 +4,7 @@ const prisma = new PrismaClient();
 
 async function log_webhookevent(params) {
   let request = {
-    "payload": JSON.stringify(params.data),
+    "payload": params.data,
     "event": params.event, 
     "createdAt": getCurrentDateUtc()
   };
@@ -12,7 +12,6 @@ async function log_webhookevent(params) {
   const response = await prisma.webhookLog.create({
     data: request
   });
-  console.log(response);
 }
 
 module.exports = {
