@@ -88,7 +88,7 @@ async function subscribeToPlan(params) {
       return {
         status: 400,
         data: null,
-        message: 'User already has a subscription',
+        message: `User already has a subscription ${user.subscriptionType}`,
         code: 'E00'
       };
     }
@@ -137,7 +137,7 @@ async function subscribeToPlan(params) {
       return {
         status: 400,
         data: null,
-        message: 'An error occured while trying to initiate payment. Kindly check again',
+        message: `{subcriptToAPlan user request: ${params}} failed with error ${response.data} and status ${response.status}`,
         code: 'E00'
       };
     }
@@ -148,7 +148,7 @@ async function subscribeToPlan(params) {
     return {
       status: 400,
       data: null,
-      message: 'User already has a subscription',
+      message: `{subcriptToAPlan user request: ${params}} failed with error ${error}`,
       code: 'E00'
     };
   }
