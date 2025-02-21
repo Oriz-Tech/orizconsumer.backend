@@ -3,6 +3,7 @@ const { getCurrentDateUtc } = require('../common/helpers/dateTimeHelper');
 const prisma = new PrismaClient();
 
 async function log_webhookevent(params) {
+  console.log(params);
   let request = {
     "payload": params.data,
     "event": params.event, 
