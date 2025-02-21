@@ -25,8 +25,6 @@ const subcribeToAPlan = async(req, res) => {
       const payload = {id: req.body.planId, userId: req.user.userId}
       logger.info(`{subcriptToAPlan user request: ${req.user.userId}}`);
       const result = await subscribeToPlan(payload);
-      console.log(result);
-      console.log('result');
       res.status(result.status).json(result);
     } catch (error) {
       logger.error(`{subcriptToAPlan user request: ${req.body}} failed with error ${error}`);
