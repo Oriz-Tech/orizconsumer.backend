@@ -45,6 +45,8 @@ model User {
   dateTrialEnd DateTime?
   lastSubscriptionDate DateTime?
   hasActivePlan Boolean @default(false)
+  isSubscriptionActive Boolean @default(false)
+  activeUserSubscriptionId Int?
 
   @@map("Users")
 }
@@ -136,6 +138,8 @@ model UserSubscription{
   nextBillingDate DateTime
   paymentStage String?
   paymentReference String?
+  paystackPlanId Int?
+  paystackCustomerId Int?
   @@map("UserSubscriptions")
 }
 
