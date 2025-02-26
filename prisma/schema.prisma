@@ -44,6 +44,7 @@ model User {
   isTrialSubscription Boolean @default(true)
   dateTrialEnd DateTime?
   lastSubscriptionDate DateTime?
+  hasActivePlan Boolean @default(false)
 
   @@map("Users")
 }

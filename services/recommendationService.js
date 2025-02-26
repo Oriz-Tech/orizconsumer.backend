@@ -234,7 +234,7 @@ async function generate_plan(params) {
     console.log(error)
     return {
       status: 400,
-      message: 'Error creating a plan',
+      message: `Error creating a plan ${error}`,
       code: 'E01',
       data: null
     };
