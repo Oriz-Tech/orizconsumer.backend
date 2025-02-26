@@ -38,6 +38,7 @@ model User {
   referalnumbers      Int?
   language            String?
   timeZone            String?
+  weight              Int?
 
 
   subscriptionType Int @default(0)

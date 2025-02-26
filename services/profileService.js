@@ -21,7 +21,9 @@ async function getEditUserDetails(params) {
       firstname: user.firstname,
       lastname: user.lastname,
       dateOfBirth: user.dateOfBirth,
-      gender: user.gender
+      gender: user.gender,
+      phonenumber: user.phonenumber,
+      weight: user.weight,
     };
 
     return {
@@ -68,7 +70,9 @@ async function updateEditUserDetails(params) {
         firstname: params.firstname,
         lastname: params.lastname,
         dateOfBirth: new Date(params.dateOfBirth).toISOString(),
-        gender: params.gender
+        gender: params.gender,
+        phonenumber: params.phonenumber, 
+        weight: params.weight
       }
     });
 
