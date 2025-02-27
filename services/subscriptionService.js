@@ -112,7 +112,7 @@ async function subscribeToPlan(params) {
       return {
         status: 400,
         data: null,
-        message: `Initiating subscription failed with an error. Kindly try again later`,
+        message: `{subcriptToAPlan user request: ${params}} failed with error ${response.data} and status ${response.status}`,
         code: 'E00'
       };
     }
@@ -123,7 +123,7 @@ async function subscribeToPlan(params) {
     return {
       status: 400,
       data: null,
-      message: `Initiating subscription failed with an error. Kindly try again later`,
+      message: `{subcriptToAPlan user request: ${params}} failed with error ${response.data} and status ${response.status}`,
       code: 'E00'
     };
   }
