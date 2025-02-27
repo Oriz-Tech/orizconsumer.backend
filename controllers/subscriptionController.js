@@ -4,9 +4,6 @@ const { getPlans, subscribeToPlan, cancelSubscription } = require('../services/s
 
 const getSubscriptionPlans = async(req, res) => {
   try {
-      req.body.userId = req.user.userId;
-      req.body.token = req.token;
-      logger.info(`{getPlans user request: ${req.user.userId}}`);
       const result = await getPlans();
       res.status(result.status).json(result);
     } catch (error) {

@@ -21,7 +21,7 @@ router.get('/api/recommendation/plan', checkAuthMiddleware, recommendationContro
 router.put('/api/recommendation/plan', checkAuthMiddleware, recommendationController.completePlanItems)
 
 //router.post('/api/subscribe/trial', checkAuthMiddleware, subscriptionController.trialSubscription)
-router.get('/api/subscribe/plans', checkAuthMiddleware, subscriptionController.getSubscriptionPlans)
+router.get('/api/subscribe/plans', subscriptionController.getSubscriptionPlans)
 router.post('/api/subscribe/plan', checkAuthMiddleware, subscriptionController.subcribeToAPlan)
 router.delete('/api/subscribe/plan', checkAuthMiddleware, subscriptionController.cancelAPlan)
 

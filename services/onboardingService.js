@@ -246,7 +246,8 @@ async function setProfileUserName(params) {
         dateupdatedutc: getCurrentDateUtc(),
         isTrialSubscription: true, 
         dateTrialEnd: nextBillingDate,
-        subscriptionType: 0
+        subscriptionType: 0,
+        isTrialSubscription: true,
       }
     });
 
