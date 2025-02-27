@@ -43,6 +43,9 @@ async function login(params) {
           token: token,
           inviteid: currentUser.inviteid,
           language: currentUser.language,
+          subscriptionType: currentUser.subscriptionType,
+          isSubscriptionActive: currentUser.isSubscriptionActive,
+          isTrialSubscription: currentUser.isTrialSubscription
         }
       };
     } else {
