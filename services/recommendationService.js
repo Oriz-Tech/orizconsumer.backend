@@ -453,7 +453,7 @@ async function get_ai_recommendation(params) {
           data = {
             "mealPlan": result.map(({ fitnessActivitiesCompleted, fitnessNumberOfActivities,
               fitnessPointsGained, fitnessTotalPoints, ...rest }) => rest),
-            "fitnesPlan": result.map(({ mealNumberOfActivities, mealActivitiesCompleted,
+            "fitnessPlan": result.map(({ mealNumberOfActivities, mealActivitiesCompleted,
               mealTotalPoints, mealPointsGained , ...rest }) => rest)
           }
         }

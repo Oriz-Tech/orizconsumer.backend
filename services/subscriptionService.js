@@ -68,6 +68,7 @@ async function subscribeToPlan(params) {
       };
     }
 
+
     let paystackPaymentRequestConfig = {
       method: 'post',
       maxBodyLength: Infinity,
