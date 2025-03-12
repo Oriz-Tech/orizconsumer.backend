@@ -49,6 +49,8 @@ model User {
   isSubscriptionActive Boolean @default(false)
   activeUserSubscriptionId Int?
 
+  point Int @default(0)
+
   @@map("Users")
 }
 

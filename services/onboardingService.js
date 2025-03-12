@@ -248,6 +248,7 @@ async function setProfileUserName(params) {
         dateTrialEnd: nextBillingDate,
         subscriptionType: 0,
         isTrialSubscription: true,
+        point: 1
       }
     });
 

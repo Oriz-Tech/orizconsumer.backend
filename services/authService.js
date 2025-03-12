@@ -45,7 +45,8 @@ async function login(params) {
           language: currentUser.language,
           subscriptionType: currentUser.subscriptionType,
           isSubscriptionActive: currentUser.isSubscriptionActive,
-          isTrialSubscription: currentUser.isTrialSubscription
+          isTrialSubscription: currentUser.isTrialSubscription,
+          points: currentUser.point
         }
       };
     } else {

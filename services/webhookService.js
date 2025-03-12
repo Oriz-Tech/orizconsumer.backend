@@ -29,15 +29,16 @@ async function log_webhookevent(params) {
         where: {
           id: subscriptionRecord.userId
         },
-        data: {
-          isTrialSubscription: false, 
-          subscriptionType: subscriptionRecord.subscriptionType,
-          lastSubscriptionDate: getCurrentDateUtc(),
-          isSubscriptionActive: true,
-          dateupdatedutc: getCurrentDateUtc(), 
-          lastaction: `SUBSCRIBED TO PLAN ${subscriptionRecord.subscriptionType}`,
-          activeUserSubscriptionId: subscriptionRecord.id
-        }
+          data: {
+            isTrialSubscription: false, 
+            subscriptionType: subscriptionRecord.subscriptionType,
+            lastSubscriptionDate: getCurrentDateUtc(),
+            isSubscriptionActive: true,
+            dateupdatedutc: getCurrentDateUtc(), 
+            lastaction: `SUBSCRIBED TO PLAN ${subscriptionRecord.subscriptionType}`,
+            activeUserSubscriptionId: subscriptionRecord.id,
+            point: {increment: 1}
+          }
       });
       await prisma.userSubscription.update({
         where: {
