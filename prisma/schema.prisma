@@ -85,6 +85,7 @@ model UserRecommendationPlan{
   totalPoints Int @default(0)
   mealPlan Json?
   fitnessPlan Json? 
+  wellnessPlan Json?
   isActive Boolean @default(false)
   dateCreatedFor DateTime
   activitySubtitle String?
@@ -98,6 +99,11 @@ model UserRecommendationPlan{
   fitnessActivitiesCompleted Int @default(0)
   fitnessPointsGained Int @default(0)
   fitnessTotalPoints Int @default(0)
+
+  wellnessNumberOfActivities Int @default(0)
+  wellnessActivitiesCompleted Int @default(0)
+  wellnessPointsGained Int @default(0)
+  wellnessTotalPoints Int @default(0)
   
 
   @@index([dateCreatedFor]) 

@@ -128,7 +128,7 @@ async function generate_plan(params) {
     logger.info('Starting to generate the meal plan using AI ');
 
 
-    let prompt = `Generate a meal plan and a fitness plan for someone
+    let prompt = `Generate a meal plan, wellness plan and a fitness plan for someone
       who is ${params.typeOfWork} "and works as a ${params.occupation}. He is an ${params.dailyRoutine} who does not go to gym,
       looking to ${params.weightGoal} and ${medicalCondition}. His body weight is ${params.weight}kg and height of  ${params.height} cm
       ${params.enjoyedActivity} and willing to commit ${params.daysPerWeek} days a week of ${params.hoursPerDayForFitness} hours per day to a fitness goal
@@ -156,6 +156,16 @@ async function generate_plan(params) {
               "cooldown": {"type": "string"}
             }
           },
+          "wellnessItem": {
+            "type": "object",
+            "properties": {
+              "earlymorning": {"type": "string"},
+              "morning": {"type": "string"},
+              "midday": {"type": "string"},
+              "afternoon": {"type": "string"},
+              "noontime": {"type": "string"}
+            }
+          },
         }
       }
   }`;
@@ -172,10 +182,7 @@ async function generate_plan(params) {
     let data = JSON.parse(jsonContent);
 
     logger.info('Parsing the data');
-    console.log(data);
-  // const addedResult = await prisma.userPlan.createMany({
-  //     data:data
-  // })
+ 
 
   // //save request
   let request = {
@@ -275,6 +282,17 @@ function generateWeeklyPlanAndAnalytics(data, startDate, numberOfDays, userId) {
           + element.fitnessPlan.reduce((sum, item) => sum + (item.point || 0), 0);
    });
 
+   //create the week analytics 
+   let wellnessPlanNumberOfActivities = 0
+   let wellnessPlanTotalPoints = 0
+
+   weeklyPlan.forEach(element => {
+    wellnessPlanNumberOfActivities = wellnessPlanNumberOfActivities 
+        + element.wellnessPlan.length;
+        wellnessPlanTotalPoints = wellnessPlanTotalPoints 
+          + element.wellnessPlan.reduce((sum, item) => sum + (item.point || 0), 0);
+   });
+
    const analytics = []
    analytics.push( {
      userId: userId, 
@@ -300,6 +318,19 @@ function generateWeeklyPlanAndAnalytics(data, startDate, numberOfDays, userId) {
     startDate: weeklyPlan[0].dateCreatedFor,
     endDate: weeklyPlan[weeklyPlan.length-1].dateCreatedFor,
     subtitle:''
+  },
+  {
+    userId: userId, 
+    weeklyPlanId: weeklyPlan[0].weeklyPlanId,
+    activityTitle: 'wellnessPlan',
+    numberOfActivities: wellnessPlanNumberOfActivities,
+    activitiesCompleted: 0,
+    pointsGained: 0,
+    totalPoints: wellnessPlanTotalPoints,
+    isActive: true,
+    startDate: weeklyPlan[0].dateCreatedFor,
+    endDate: weeklyPlan[weeklyPlan.length-1].dateCreatedFor,
+    subtitle:''
   })
 
 
@@ -317,6 +348,7 @@ Date.prototype.addDays = function (days) {
 function generateWeeklyPlans(data, startDate, numberOfDays, userId) {
   const mealTitles = ['breakfast', 'midmorning', 'lunch', 'midafternoon', 'dinner'];
   const fitnessTitles = ['warmup', 'strength', 'core', 'cardio', 'cooldown'];
+  const wellnessTitles = ['earlymorning', 'morning', 'midday', 'afternoon', 'noontime'];
 
   // Function to get random meal or fitness item from the list
   function getRandomItem(items) {
@@ -344,19 +376,30 @@ function generateWeeklyPlans(data, startDate, numberOfDays, userId) {
       planDetailId: `${dailyPlanId}-${title}-${Math.floor(Math.random() * 10000)}`
     }));
 
+    const dailyWellnessPlan = wellnessTitles.map((title) => ({
+      title: title,
+      detail: getRandomItem(data).wellnessItem[title], // Get random fitness activity for the day
+      point: Math.floor(Math.random() * 30) + 10, // Random points between 10 and 40
+      isDone: false,
+      planDetailId: `${dailyPlanId}-${title}-${Math.floor(Math.random() * 10000)}`
+    }));
+
     //console.log(startDate)
     weeklyPlan.push({
       userId: userId,
       dailyPlanId: dailyPlanId,
       weeklyPlanId: weeklyPlanId,
-      numberOfActivities: dailyMealPlan.length + dailyFitnessPlan.length,
+      numberOfActivities: dailyMealPlan.length + dailyFitnessPlan.length + dailyFitnessPlan.length,
       activitiesCompleted: 0,
       pointsGained: 0,
       totalPoints:
         dailyMealPlan.reduce((sum, item) => sum + (item.point || 0), 0) +
-        dailyFitnessPlan.reduce((sum, item) => sum + (item.point || 0), 0),
+        dailyFitnessPlan.reduce((sum, item) => sum + (item.point || 0), 0) +
+        dailyMealPlan.reduce((sum, item) => sum + (item.point || 0), 0),
       mealPlan: dailyMealPlan,
       fitnessPlan: dailyFitnessPlan,
+      wellnessPlan: dailyWellnessPlan, 
+      
       isActive: true,
       dateCreatedFor: startDate.addDays(day),
 
@@ -364,7 +407,10 @@ function generateWeeklyPlans(data, startDate, numberOfDays, userId) {
       mealTotalPoints: dailyMealPlan.reduce((sum, item) => sum + (item.point || 0), 0),
 
       fitnessNumberOfActivities:  dailyFitnessPlan.length,
-      fitnessTotalPoints: dailyFitnessPlan.reduce((sum, item) => sum + (item.point || 0), 0)
+      fitnessTotalPoints: dailyFitnessPlan.reduce((sum, item) => sum + (item.point || 0), 0),
+
+      wellnessNumberOfActivities:  dailyWellnessPlan.length,
+      wellnessTotalPoints: dailyWellnessPlan.reduce((sum, item) => sum + (item.point || 0), 0)
     });
   }
   return weeklyPlan;
