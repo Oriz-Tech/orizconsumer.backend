@@ -492,15 +492,24 @@ async function get_ai_recommendation(params) {
             mealActivitiesCompleted:true, 
             mealNumberOfActivities:true, 
             mealPointsGained:true, 
-            mealTotalPoints: true,     
+            mealTotalPoints: true,   
+            wellnessNumberOfActivities: true,
+            wellnessActivitiesCompleted: true,
+            wellnessPointsGained: true, 
+            wellnessTotalPoints: true 
           }
         })
         if(result){
           data = {
             "mealPlan": result.map(({ fitnessActivitiesCompleted, fitnessNumberOfActivities,
-              fitnessPointsGained, fitnessTotalPoints, ...rest }) => rest),
+              fitnessPointsGained, fitnessTotalPoints, wellnessNumberOfActivities, wellnessActivitiesCompleted,
+              wellnessTotalPoints, wellnessPointsGained, ...rest }) => rest),
             "fitnessPlan": result.map(({ mealNumberOfActivities, mealActivitiesCompleted,
-              mealTotalPoints, mealPointsGained , ...rest }) => rest)
+              mealTotalPoints, mealPointsGained , wellnessNumberOfActivities, wellnessActivitiesCompleted,
+              wellnessTotalPoints, wellnessPointsGained, ...rest }) => rest),
+            "wellnessPlan": result.map(({ mealNumberOfActivities, mealActivitiesCompleted,
+              mealTotalPoints, mealPointsGained,fitnessActivitiesCompleted, fitnessNumberOfActivities,
+              fitnessPointsGained, fitnessTotalPoints , ...rest }) => rest)
           }
         }
       }
