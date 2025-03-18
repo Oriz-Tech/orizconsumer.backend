@@ -11,7 +11,8 @@ const { OtpTypes } = require('../common/enums/appEnums.js');
 const {
   comparePassword,
   generateToken,
-  generateReferalLink
+  generateReferalLink,
+  hashPassword
 } = require('../common/helpers/securityHelper.js');
 const { getCurrentDateUtc } = require('../common/helpers/dateTimeHelper');
 
@@ -29,10 +30,6 @@ async function createProfile(params) {
       }
     });
 
-    logger.info(`previous user details: ${JSON.stringify(previousUser)}`);
-    const newUser = new User();
-    newUser.profile(params.firstname, params.lastname, params.password, params.email, params.phonenumber);
-
     if (previousUser) {
       // Check if previousUser is not null
       return {
@@ -43,6 +40,9 @@ async function createProfile(params) {
       };
     }
 
+    hashedPassword = hashPassword(params.password);
+    const newUser = new User();
+    newUser.profile(params.firstname, params.lastname, hashedPassword, params.email, params.phonenumber);
     
     const createdUser = await prisma.user.create({
       data: newUser.toJSON()
@@ -201,18 +201,18 @@ async function verifyProfilePhonenumber(params) {
       };
     }
 
-    let otpCode = '12345'; // Math.floor(10000 + Math.random() * 90000).toString();
+    let otpCode = Math.floor(10000 + Math.random() * 90000).toString();
     const emailotpRecord = new Otp(otpCode, userRecord.email, OtpTypes.ONBOARDING);
     const emailOtpSentResult = await prisma.otpModel.create({
       data: emailotpRecord.toJSON()
     });
 
     logger.info('sending email');
-    // const sendingEmailResponse = await sendEmail(
-    //   userEmail,
-    //   'Oriz Health - Onboarding Otp',
-    //   `Use the Otp ${otpCode}`
-    // );
+    const sendingEmailResponse = await sendEmail(
+      userRecord.email,
+      'Oriz Health - Onboarding Otp',
+      `Use the Otp ${otpCode}`
+    );
 
 
     return {

@@ -1,5 +1,6 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const logger = require('../../config/loggerConfig');
 
 function hashPassword(password) {
   try {
@@ -7,7 +8,8 @@ function hashPassword(password) {
     const hash = bcrypt.hashSync(password, salt);
     return hash;
   } catch (error) {
-    throw new Error(`Error hashing password: ${error.message}`);
+    logger.log(`Error hashing password: ${error.message}`);
+    return null;
   }
 }
 
@@ -16,7 +18,8 @@ function comparePassword(password, hashedPassword) {
     const isMatch = bcrypt.compareSync(password, hashedPassword);
     return isMatch;
   } catch (error) {
-    throw new Error(`Error comparing password: ${error.message}`);
+    logger.log(`Error comparing password: ${error.message}`);
+    return null;
   }
 }
 

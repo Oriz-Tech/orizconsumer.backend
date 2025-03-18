@@ -15,10 +15,10 @@ class User {
   isemailverified = false;
   isPhonenumberVerified = false;
 
-  profile(firstname, lastname, password, email, phonenumber) {
+  profile(firstname, lastname, hashedPassword, email, phonenumber) {
     this.firstname = firstname;
     this.lastname = lastname;
-    this.password = hashPassword(password);
+    this.password = hashedPassword;
     this.email = email;
     this.phonenumber = phonenumber;
     this.datecreatedutc = new Date().toUTCString();
