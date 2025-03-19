@@ -33,7 +33,7 @@ async function login(params) {
       const token = generateToken(currentUser.id);
       return {
         status: 200,
-        message: 'Login Successful',
+        message: 'successfully logged in',
         code: 'S00',
         data: {
           firstname: currentUser.FirstName,
