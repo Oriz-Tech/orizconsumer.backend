@@ -45,9 +45,13 @@ model User {
   isTrialSubscription Boolean @default(true)
   dateTrialEnd DateTime?
   lastSubscriptionDate DateTime?
-  hasActivePlan Boolean @default(false)
+  
   isSubscriptionActive Boolean @default(false)
   activeUserSubscriptionId Int?
+
+  hasActiveWellnessPlan Boolean @default(false)
+  hasActiveFitnessPlan Boolean @default(false)
+  hasActiveMealPlan Boolean @default(false)
 
   point Int @default(0)
 

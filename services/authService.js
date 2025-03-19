@@ -46,7 +46,10 @@ async function login(params) {
           subscriptionType: currentUser.subscriptionType,
           isSubscriptionActive: currentUser.isSubscriptionActive,
           isTrialSubscription: currentUser.isTrialSubscription,
-          points: currentUser.point
+          points: currentUser.point,
+          hasActiveWellnessPlan: currentUser.hasActiveWellnessPlan,
+          hasActiveFitnessPlan: currentUser.hasActiveFitnessPlan,
+          hasActiveMealPlan: currentUser.hasActiveMealPlan,
         }
       };
     } else {
