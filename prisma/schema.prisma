@@ -38,7 +38,9 @@ model User {
   referalnumbers      Int?
   language            String?
   timeZone            String?
-  weight              Int?
+  weight              String?
+  height              String?
+  ethnicity           String?
 
 
   subscriptionType Int @default(0)
@@ -206,7 +208,7 @@ model OtpModel {
   otpHeader        String   // A unique header or identifier (e.g., UUID)
   dateToExpireUtc  String   // The expiration date for the OTP (String type to store UTC string)
   otpType          Int   // The type of OTP (e.g., SMS, email, etc.)
-  
+  userId          Int     // The user ID associated with the OTP
   @@map("Otps") // Maps this model to a table named 'OtpModels' in your database
 }
 

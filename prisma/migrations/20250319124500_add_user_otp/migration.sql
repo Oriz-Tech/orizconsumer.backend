@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Otps" ADD COLUMN     "userId" INTEGER NOT NULL DEFAULT 0;

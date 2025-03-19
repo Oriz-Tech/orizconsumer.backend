@@ -8,6 +8,7 @@ const subscriptionController = require("../controllers/subscriptionController");
 const profileController = require('../controllers/profileController')
 const planController = require('../controllers/planController')
 const webhookController = require('../controllers/webhookController')
+const accountv2Controller = require('../controllers/accountv2Controller')
 
 router.post('/api/onboarding/profile', onboardingController.profile);
 router.post('/api/onboarding/verify/email', onboardingController.verifyEmail);
@@ -36,6 +37,11 @@ router.put('/api/profile/planSettings', checkAuthMiddleware, planController.edit
 
 router.post('/api/webhook', webhookController.logWebhookEvent)
 
+router.post('/api/account/check', accountv2Controller.checkIdentifier);
+router.post('/api/account/verify/email', accountv2Controller.verifyEmail);
+router.post('/api/account/verify/phonenumber', accountv2Controller.verifyPhoneNumber);
+router.post('/api/account/profile', accountv2Controller.createProfileEndpoint);
+router.post('/api/account/details', checkAuthMiddleware, accountv2Controller.updateDetails);
 
 
 module.exports = router;

@@ -4,7 +4,7 @@ const { hashPassword } = require('../../common/helpers/securityHelper');
 const otpTime = process.env.OTP;
 
 class Otp {
-  constructor(otp, identifier, otpType) {
+  constructor(otp, identifier, userId) {
     let currentDate = new Date();
     let expirationDate = new Date(currentDate.getTime() + 1000 * otpTime);
     this.otp = hashPassword(otp);
@@ -13,7 +13,8 @@ class Otp {
     this.dateCreatedUtc = currentDate.toUTCString();
     this.otpHeader = uuidv4();
     this.dateToExpireUtc = expirationDate.toUTCString();
-    this.otpType = otpType;
+    this.otpType = 1;
+    this.userId = userId;
   }
 
   toJSON() {
@@ -24,7 +25,8 @@ class Otp {
       dateCreatedUtc: this.dateCreatedUtc,
       otpHeader: this.otpHeader,
       dateToExpireUtc: this.dateToExpireUtc,
-      otpType: this.otpType
+      otpType: this.otpType, 
+      userId: this.userId
     };
   }
 }

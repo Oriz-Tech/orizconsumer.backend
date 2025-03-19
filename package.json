@@ -18,6 +18,7 @@
   "dependencies": {
     "@google/generative-ai": "^0.14.1",
     "@prisma/client": "^5.16.2",
+    "@vonage/server-sdk": "^3.20.0",
     "axios": "^1.7.5",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
@@ -25,6 +26,7 @@
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "express-winston": "^4.2.0",
+    "joi": "^17.13.3",
     "jsonwebtoken": "^9.0.2",
     "mssql": "^10.0.2",
     "openai": "^4.83.0",

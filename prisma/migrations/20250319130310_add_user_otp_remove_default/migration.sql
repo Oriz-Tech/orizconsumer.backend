@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Otps" ALTER COLUMN "userId" DROP DEFAULT;
