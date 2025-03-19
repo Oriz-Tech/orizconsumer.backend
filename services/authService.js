@@ -12,7 +12,7 @@ async function login(params) {
   await prisma.loginHistory.create({
     data: {
       userEmail: params.email,
-      loginAction: 'LOGIN ATTEMPTED'
+      loginAction: 'LOGIN ATTEMPTED.'
     }
   });
 
