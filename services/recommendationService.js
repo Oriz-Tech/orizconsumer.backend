@@ -14,6 +14,7 @@ const prisma = new PrismaClient();
 const { OpenAI } = require('openai');
 const logger = require('../config/loggerConfig');
 const { pl } = require('date-fns/locale');
+const { param } = require('../routes/onboardingRoute');
 
 const client = new OpenAI({
   apiKey: process.env['OPENAI_API_KEY'] // This is the default and can be omitted
@@ -93,6 +94,7 @@ async function generate_plan(params) {
   logger.info('Starting to generate the meal plan using AI ');
   let prompt = '';
 
+  //const wellnessTitles = ['earlymorning', 'morning', 'midday', 'afternoon', 'noontime'];
   switch (params.plan) {
     case 'meal':
       prompt = `Generate a meal plan for someone who is ${params.typeOfWork} "and works as a ${params.occupation}. He is an ${params.dailyRoutine} who does not go to gym,
@@ -116,22 +118,20 @@ async function generate_plan(params) {
         }`;
       break;
     case 'fitness':
-      prompt = `Create a personalized 3-day fitness plan with exercise activities 
-      from the following lists ${JSON.stringify(workoutActivities)} to fit within
+      prompt = `Create a personalized fitness plan based on 
+      the following lists ${JSON.stringify(workoutActivities)} to fit within
       the following parameters: 
       the individual goal is to ${params.weightGoal}, 
       they are ${params.activity}, prefer ${params.workoutType} workouts, 
       and are willing to commit to ${params.daysPerWeek} days per week. 
       They also have ${params.allergies} allergies.
       Include walks and runs, and provide each workout in 
-      reps and sets with proper workout terminology.For each activity, 
+      reps and sets with proper workout terminology. Generate 3 warmups for example, 
+      3 cardio activity and on like that. For each activity, 
       offer a one-sentence short description, make the title two words
        and structure the plan using this JSON schema:
         {
           "type":"array",
-          "properties": {
-            "fitnessItem": {
-              "type": "object",
               "properties": {
                 "warmup": {
                   "type": "object", 
@@ -184,29 +184,66 @@ async function generate_plan(params) {
                   }
                 }
               }
-            }
-          }
         }`;
       break;
     case 'wellness':
-      prompt = `Generate a wellness plan for someone who is ${params.typeOfWork} "and works as a ${params.occupation}. He is an ${params.dailyRoutine} who does not go to gym,
-        looking to ${params.weightGoal} and ${medicalCondition}. His body weight is ${params.weight}kg and height of  ${params.height} cm
-        ${params.enjoyedActivity} and willing to commit ${params.daysPerWeek} days a week of ${params.hoursPerDayForFitness} hours per day to a fitness goal
-        and ${dietaryRestriction}. He gets ${params.sleepingHours} hours of sleep per night using this JSON Schema:
+      prompt = `
+        Create a json array of personalize wellness plan for this goal ${params.wellnessGoal} based on these requirements: 
+        length of sleep: ${params.sleepingHours},
+        stress levels:  ${params.stressLevel},
+        time for self-care: ${params.selfCareTime},
+        preferred wellness activity: ${params.wellnessActivity}.
+        Make the description 13 words and title two words
+        and structure the plan using this JSON schema:
         {
           "type":"array",
-          "properties": {
-            "fitnessItem": {
-              "type": "object",
               "properties": {
-                "warmup": {"type": "string"},
-                "strength": {"type": "string"},
-                "core": {"type": "string"},
-                "cardio": {"type": "string"},
-                "cooldown": {"type": "string"}
+                "earlymorning": {
+                    "type": "object", 
+                    "properties":{
+                    "title": {"type": "string"},
+                    "description": {"type": "string"},
+                    "minutes": {"type": "Integer"},
+                      "videourl": ""
+                    }
+                  },
+                  "midday": {
+                    "type": "object", 
+                    "properties":{
+                    "title": {"type": "string"},
+                    "description": {"type": "string"},
+                    "minutes": {"type": "Integer"},
+                      "videourl": ""
+                    }
+                  },
+                  "morning": {
+                    "type": "object", 
+                    "properties":{
+                    "title": {"type": "string"},
+                    "description": {"type": "string"},
+                    "minutes": {"type": "Integer"},
+                      "videourl": ""
+                    }
+                  },
+                  "afternoon": {
+                    "type": "object", 
+                    "properties":{
+                    "title": {"type": "string"},
+                    "description": {"type": "string"},
+                    "minutes": {"type": "Integer"},
+                      "videourl": ""
+                    }
+                  },
+                  "noontime": {
+                    "type": "object", 
+                    "properties":{
+                    "title": {"type": "string"},
+                    "description": {"type": "string"},
+                    "minutes": {"type": "Integer"},
+                      "videourl": ""
+                    }
+                  }
               }
-            }
-          }
         }`;
       break;
   }
@@ -216,8 +253,8 @@ async function generate_plan(params) {
   const response = await result.response;
   const text = response.text();
   logger.info('Completed ai model generation');
-  //logger.info(text);
-  //return;
+  logger.info(text);
+  
 
   let startIndex = text.indexOf('[');
   let endIndex = text.lastIndexOf(']');
@@ -226,40 +263,9 @@ async function generate_plan(params) {
   let data = JSON.parse(jsonContent);
 
   logger.info('Parsing the data');
-  
+  //return;
   // //save request
-  const planRequestSettings = await prisma.userPlanSettings.findFirst({
-    where: {
-      userId: userId
-    }
-  });
-
-  let planRequestSettingsFields = {};
-
-  // Check the planType and update the corresponding field
-  if (params.plan === 'meal') {
-    planRequestSettingsFields.mealPlanSetting = params;
-  } else if (params.plan === 'fitness') {
-    planRequestSettingsFields.fitnessPlanSetting = params;
-  } else if (params.plan === 'wellness') {
-    planRequestSettingsFields.wellnessPlanSetting = params;
-  }
-
-  if (planRequestSettings) {
-    await prisma.userPlanSettings.update({
-      where: {
-        id: planRequestSettings.id
-      },
-      data: planRequestSettingsFields
-    });
-  } else {
-    await prisma.userPlanSettings.create({
-      data: {
-        userId: userId,
-        ...planRequestSettingsFields
-      }
-    });
-  }
+  await saveaiRequest(userId, params);
 
   const previousPlans = await prisma.userRecommendationPlan.findMany({
     where: {
@@ -275,90 +281,15 @@ async function generate_plan(params) {
   });
 
   if (previousPlans.length > 0) {
-    if (params.plan == 'fitness') {
-      console.log('updating fitness plan');
-      const fitnessTitles = ['warmup', 'strength', 'core', 'cardio', 'cooldown'];
-      const getRandomItem = (items) => items[Math.floor(Math.random() * items.length)];
-      const createPlan = (titles, dataKey, dailyPlanId) =>
-        titles.map((title) => ({
-          title,
-          detail: getRandomItem(data)[dataKey][title],
-          point: Math.floor(Math.random() * 30) + 10,
-          isDone: false,
-          planDetailId: `${dailyPlanId}-${title}-${Math.floor(Math.random() * 10000)}`
-        }));
-
-      const getObjectByValue = (list, key, value) => {
-        return list.find((obj) => obj[key] === value);
-      };
-
-      newWeekAnalytics = [];
-      //console.log(previousPlans)
-      for (let i = 0; i < previousPlans.length; i++) {
-        plan = previousPlans[i];
-        newFitnessPlan = createPlan(fitnessTitles, 'fitnessItem', plan.dailyPlanId);
-
-        weekValue = getObjectByValue(newWeekAnalytics, 'weeklyPlanId', plan.weeklyPlanId);
-
-        if (weekValue) {
-          weekValue.numberOfActivities += newFitnessPlan.length;
-          weekValue.totalPoints += newFitnessPlan.reduce((sum, item) => sum + (item.point || 0), 0);
-          //console.log(weekValue);
-        } else {
-          prevWeekPlan = getObjectByValue(prevWeeklyPlans, 'weeklyPlanId', plan.weeklyPlanId);
-          weekValue = {
-            userId,
-            weeklyPlanId: plan.weeklyPlanId,
-            activityTitle: 'fitnessPlan',
-            numberOfActivities: newFitnessPlan.length,
-            activitiesCompleted: 0,
-            pointsGained: 0,
-            totalPoints: newFitnessPlan.reduce((sum, item) => sum + (item.point || 0), 0),
-            isActive: true,
-            startDate: prevWeekPlan.startDate,
-            endDate: prevWeekPlan.endDate,
-            subtitle: ''
-          };
-
-          //console.log(weekValue);
-          newWeekAnalytics.push(weekValue);
-        }
-        await prisma.userRecommendationPlan.update({
-          where: {
-            id: plan.id
-          },
-          data: {
-            fitnessPlan: newFitnessPlan,
-            fitnessNumberOfActivities: newFitnessPlan.length,
-            fitnessTotalPoints: newFitnessPlan.reduce((sum, item) => sum + (item.point || 0), 0)
-          }
-        });
-
-        console.log(i);
-      }
-
-      await prisma.userWeeklyRecommendationPlan.createMany({
-        data: newWeekAnalytics
-      });
-
-      await prisma.user.update({
-        where: {
-          id: userId
-        },
-        data: { hasActiveFitnessPlan: true, dateupdatedutc: new Date() }
-      });
-
-      console.log(newWeekAnalytics);
-      return {
-        status: 200,
-        message: 'Success',
-        code: 'S00',
-        data: null
-      };
+    if (params.plan == 'fitness' || params.plan == 'wellness') {
+      return await updatePlan(params.plan, data, previousPlans, prevWeeklyPlans, userId);
     }
-    //query to update the previous plan
+  } else {
+    return await createPlan(data, userId, params);
   }
+}
 
+const createPlan = async (data, userId, params) => {
   let dailyPlans = [];
   let weeklyAnalytics = [];
   numberOfDays = 7;
@@ -379,16 +310,15 @@ async function generate_plan(params) {
   }
 
   try {
-    const addedResult = await prisma.userRecommendationPlan.createMany({
+    await prisma.userRecommendationPlan.createMany({
       data: dailyPlans
     });
-    const addedAnalytics = await prisma.userWeeklyRecommendationPlan.createMany({
+    await prisma.userWeeklyRecommendationPlan.createMany({
       data: weeklyAnalytics
     });
 
     let updatedFields = {};
 
-    // Check the planType and update the corresponding field
     if (params.plan === 'meal') {
       updatedFields.hasActiveMealPlan = true;
     } else if (params.plan === 'fitness') {
@@ -397,12 +327,18 @@ async function generate_plan(params) {
       updatedFields.hasActiveWellnessPlan = true;
     }
 
-    const updateUser = await prisma.user.update({
+    await prisma.user.update({
       where: {
         id: userId
       },
       data: updatedFields
     });
+    return {
+      status: 200,
+      message: 'Success',
+      code: 'S00',
+      data: null
+    };
   } catch (error) {
     console.log(error);
     return {
@@ -419,7 +355,7 @@ async function generate_plan(params) {
     code: 'S00',
     data: null
   };
-}
+};
 
 function generateWeeklyPlanAndAnalytics(data, startDate, numberOfDays, userId, plan) {
   // Generate weekly plan for a specific plan type (meal, fitness, or wellness)
@@ -506,6 +442,9 @@ Date.prototype.addDays = function (days) {
   return date;
 };
 
+function generatePoint() {
+  return Math.floor(Math.random() * 30) + 10;
+}
 function generateWeeklyPlans(data, startDate, numberOfDays, userId, options = 'meal') {
   console.log(JSON.stringify(data));
   const mealTitles = ['breakfast', 'midmorning', 'lunch', 'midafternoon', 'dinner'];
@@ -520,7 +459,7 @@ function generateWeeklyPlans(data, startDate, numberOfDays, userId, options = 'm
     titles.map((title) => ({
       title,
       detail: getRandomItem(data)[title],
-      point: Math.floor(Math.random() * 30) + 10,
+      point: generatePoint(),
       isDone: false,
       planDetailId: `${dailyId}-${title}-${Math.floor(Math.random() * 10000)}`
     }));
@@ -824,6 +763,126 @@ async function complete_plan_items(params) {
     return { status: 500, message: 'An Error occured', code: 'E00', data: null };
   }
 }
+
+const saveaiRequest = async (userId, params) => {
+  const planRequestSettings = await prisma.userPlanSettings.findFirst({
+    where: {
+      userId: userId
+    }
+  });
+
+  let planRequestSettingsFields = {};
+
+  // Check the planType and update the corresponding field
+  if (params.plan === 'meal') {
+    planRequestSettingsFields.mealPlanSetting = params;
+  } else if (params.plan === 'fitness') {
+    planRequestSettingsFields.fitnessPlanSetting = params;
+  } else if (params.plan === 'wellness') {
+    planRequestSettingsFields.wellnessPlanSetting = params;
+  }
+
+  if (planRequestSettings) {
+    await prisma.userPlanSettings.update({
+      where: {
+        id: planRequestSettings.id
+      },
+      data: planRequestSettingsFields
+    });
+  } else {
+    await prisma.userPlanSettings.create({
+      data: {
+        userId: userId,
+        ...planRequestSettingsFields
+      }
+    });
+  }
+};
+
+const updatePlan = async (planType, data, previousPlans, prevWeeklyPlans, userId) => {
+  const titlesMap = {
+    fitness: ['warmup', 'strength', 'core', 'cardio', 'cooldown'],
+    wellness: ['earlymorning', 'morning', 'midday', 'afternoon', 'noontime']
+  };
+
+  console.log(`Updating ${planType} plan`);
+
+  const titles = titlesMap[planType];
+  const getRandomItem = (items) => items[Math.floor(Math.random() * items.length)];
+
+  const createPlan = (titles, dataKey, dailyPlanId) =>
+    titles.map((title) => ({
+      title,
+      detail: getRandomItem(data)[title],
+      point: generatePoint(),
+      isDone: false,
+      planDetailId: `${dailyPlanId}-${title}-${Math.floor(Math.random() * 10000)}`
+    }));
+
+  const getObjectByValue = (list, key, value) => list.find((obj) => obj[key] === value);
+
+  let newWeekAnalytics = [];
+
+  for (let i = 0; i < previousPlans.length; i++) {
+    const plan = previousPlans[i];
+    const newPlan = createPlan(titles, `${planType}Item`, plan.dailyPlanId);
+
+    let weekValue = getObjectByValue(newWeekAnalytics, 'weeklyPlanId', plan.weeklyPlanId);
+
+    if (weekValue) {
+      weekValue.numberOfActivities += newPlan.length;
+      weekValue.totalPoints += newPlan.reduce((sum, item) => sum + (item.point || 0), 0);
+    } else {
+      const prevWeekPlan = getObjectByValue(prevWeeklyPlans, 'weeklyPlanId', plan.weeklyPlanId);
+      weekValue = {
+        userId,
+        weeklyPlanId: plan.weeklyPlanId,
+        activityTitle: `${planType}Plan`,
+        numberOfActivities: newPlan.length,
+        activitiesCompleted: 0,
+        pointsGained: 0,
+        totalPoints: newPlan.reduce((sum, item) => sum + (item.point || 0), 0),
+        isActive: true,
+        startDate: prevWeekPlan.startDate,
+        endDate: prevWeekPlan.endDate,
+        subtitle: ''
+      };
+
+      newWeekAnalytics.push(weekValue);
+    }
+
+    await prisma.userRecommendationPlan.update({
+      where: { id: plan.id },
+      data: {
+        [`${planType}Plan`]: newPlan,
+        [`${planType}NumberOfActivities`]: newPlan.length,
+        [`${planType}TotalPoints`]: newPlan.reduce((sum, item) => sum + (item.point || 0), 0)
+      }
+    });
+
+    //console.log(i);
+  }
+
+  await prisma.userWeeklyRecommendationPlan.createMany({
+    data: newWeekAnalytics
+  });
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: {
+      [`hasActive${planType.charAt(0).toUpperCase() + planType.slice(1)}Plan`]: true,
+      dateupdatedutc: new Date()
+    }
+  });
+
+  //console.log(newWeekAnalytics);
+  return {
+    status: 200,
+    message: 'Success',
+    code: 'S00',
+    data: null
+  };
+};
 
 module.exports = {
   generate_plan,

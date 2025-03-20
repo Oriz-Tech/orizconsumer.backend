@@ -5,7 +5,7 @@ const generatePlan = async(req, res) => {
     try {
         logger.info(`{generatePlan user request: ${req.body}}`);
         req.body.userId = req.user.userId;
-        req.body.token = req.token;
+        //req.body.token = req.token;
         const result = await generate_plan(req.body);
         res.status(result.status).json(result);
       } catch (error) {
