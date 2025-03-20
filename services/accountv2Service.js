@@ -36,7 +36,7 @@ async function checkUser(params) {
 }
 
 async function sendOtpEmail(email, userId) {
-  let otpCode = '12345'; // Math.floor(10000 + Math.random() * 90000).toString();
+  let otpCode = '1234'; // Math.floor(10000 + Math.random() * 90000).toString();
   const emailotpRecord = new Otp(otpCode, email, userId, OtpTypes.ONBOARDING);
   await prisma.otpModel.create({
     data: emailotpRecord.toJSON()
@@ -135,7 +135,7 @@ async function verifyOtpSendOrLogin(params, isSend) {
 }
 
 async function sendOtpPhonenumber(phonenumber, userId) {
-  let otpCode = '12345'; // Math.floor(10000 + Math.random() * 90000).toString();
+  let otpCode = '1234'; // Math.floor(10000 + Math.random() * 90000).toString();
   const emailotpRecord = new Otp(otpCode, phonenumber, userId, OtpTypes.ONBOARDING);
   await prisma.otpModel.create({
     data: emailotpRecord.toJSON()
