@@ -12,85 +12,21 @@ const prisma = new PrismaClient();
 
 const { OpenAI } = require('openai');
 const logger = require('../config/loggerConfig');
+const { pl } = require('date-fns/locale');
 
 const client = new OpenAI({
   apiKey: process.env['OPENAI_API_KEY'] // This is the default and can be omitted
 });
 
-// "type": "object",
-//   "properties": {
-//     "day": { "type": "string" },
-//     "mealPlan": {
-//       "type": "array",
-//       "items": {
-//         "type": "object",
-//         "properties": {
-//           "mealItem": { "type": "string" },
-//           "isDone": { "type": "boolean" },
-//           "id": ${uuidv4()}
-//         }
-//       },
-//       "workoutPlan": {
-//       "type": "array",
-//       "items": {
-//         "type": "object",
-//         "properties": {
-//           "workoutItem": { "type": "string" },
-//           "isDone": { "type": "boolean" },
-//           "id": ${uuidv4()}
-//         }
-//       }
-//     },
-//     "userId": ${userId},
-//     "planCorrelationId": ${planCorrelationId},
-//     "isActive": ${true}
-async function generate_plan_openai(params) {
-  let userId = params.userId;
-  let currentDate = getCurrentDateUtc().toISOString().slice(0, 19).replace('T', ' ');
-  let medicalCondition = 'has no medical condition';
-  let dietaryRestriction = 'has no dietary restriction';
-
-  if (params.hasMedicationCondition == true) {
-    medicalCondition = 'has a ' + params.medicalCondition;
-  }
-
-  if (params.hasDietaryRestriction == true) {
-    dietaryRestriction = 'is ' + params.dietaryRestriction;
-  }
-
-  let planCorrelationId = uuidv4();
-  let prompt = `Generate a meal and fitness plan for someone 
-    who is ${params.typeOfWork} "and works as a ${params.occupation}. He is an ${params.dailyRoutine} who does not go to gym, 
-    looking to ${params.weightGoal} and ${medicalCondition}. His body weight is ${params.weight}kg and height of  ${params.height} cm  
-    ${params.enjoyedActivity} and willing to commit ${params.daysPerWeek} days a week of ${params.hoursPerDayForFitness} hours per day to a fitness goal
-    and ${dietaryRestriction}. He gets ${params.sleepingHours} hours of sleep per night using this JSON Schema: 
-    {   
-        "type": "object",
-        "properties": {
-            "day": { "type": "string" },
-            "mealPlan": { "type": "object", "properties": {"breakfast"} },
-            "fitnessPlan":{ "type": "string" },
-            "isDone": {"type":"boolean"},
-            "userId": ${userId},
-            "planCorrelationId": ${planCorrelationId}, 
-            "isActive": ${true}
-        }
-    }`;
-
-  const completion = await client.chat.completions.create({
-    messages: [{ role: 'user', content: prompt }],
-    model: 'gpt-4o-mini'
-  });
-
-  console.log(completion.choices[0].message);
-}
-
-
-
 async function generate_plan(params) {
-  //verify subscription
-  //see if they have an active plan
-
+  if (!params.plan) {
+    return {
+      status: 400,
+      message: 'Plan type is required',
+      code: 'S00',
+      data: null
+    };
+  }
   let userId = params.userId;
   const user = await prisma.user.findFirst({
     where: {
@@ -115,42 +51,33 @@ async function generate_plan(params) {
     };
   }
 
-  if(!params.plan){
+  if (user.hasActiveFitnessPlan && params.plan === 'fitness') {
     return {
       status: 400,
-      message: 'Plan type is required',
+      message: 'User has an Active Fitness Plan',
       code: 'S00',
       data: null
     };
   }
 
-  if(user.hasActiveFitnessPlan && params.plan === 'fitness'){
+  if (user.hasActiveWellnessPlan && params.plan === 'wellness') {
     return {
-      status: 400,      
-      message: 'User has an Active Fitness Plan',
-      code: 'S00',
-      data: null  
-    };
-  }
-
-  if(user.hasActiveWellnessPlan && params.plan === 'wellness'){
-    return {
-      status: 400,      
+      status: 400,
       message: 'User has an Active Wellness Plan',
       code: 'S00',
-      data: null  
+      data: null
     };
   }
 
-  if(user.hasActiveMealPlan && params.plan === 'meal'){
+  if (user.hasActiveMealPlan && params.plan === 'meal') {
     return {
-      status: 400,      
+      status: 400,
       message: 'User has an Active meal Plan',
       code: 'S00',
-      data: null  
+      data: null
     };
   }
-  
+
   let medicalCondition = 'has no medical condition';
   let dietaryRestriction = 'has no dietary restriction';
 
@@ -162,7 +89,6 @@ async function generate_plan(params) {
     dietaryRestriction = 'is ' + params.dietaryRestriction;
   }
 
-  let planCorrelationId = uuidv4();
   logger.info('Starting to generate the meal plan using AI ');
   let prompt = '';
 
@@ -189,21 +115,70 @@ async function generate_plan(params) {
         }`;
       break;
     case 'fitness':
-      prompt = `Generate a fitness plan for someone who is ${params.typeOfWork} "and works as a ${params.occupation}. He is an ${params.dailyRoutine} who does not go to gym,
-        looking to ${params.weightGoal} and ${medicalCondition}. His body weight is ${params.weight}kg and height of  ${params.height} cm
-        ${params.enjoyedActivity} and willing to commit ${params.daysPerWeek} days a week of ${params.hoursPerDayForFitness} hours per day to a fitness goal
-        and ${dietaryRestriction}. He gets ${params.sleepingHours} hours of sleep per night using this JSON Schema:
+      prompt = `Create a personalized fitness plan with the following parameters: 
+      the individual goal is to ${params.weightGoal}, 
+      they are ${params.activity}, prefer ${params.workoutType} workouts, 
+      and are willing to commit to ${params.daysPerWeek} days per week. 
+      They also have ${params.allergies} allergies.Include walks and runs, and provide each workout in 
+      reps and sets with proper workout terminology. For each activity, 
+      offer a one-sentence short description, make the title two words
+       and structure the plan using this JSON schema::
         {
           "type":"array",
           "properties": {
             "fitnessItem": {
               "type": "object",
               "properties": {
-                "warmup": {"type": "string"},
-                "strength": {"type": "string"},
-                "core": {"type": "string"},
-                "cardio": {"type": "string"},
-                "cooldown": {"type": "string"}
+                "warmup": {
+                  "type": "object", 
+                  "properties":{
+                  "title": {"type": "string"},
+                    "description": {"type": "string"},
+                    "sets": {"type": "number"},
+                    "reps": {"type": "number"},
+                    "videourl": ""
+                  }
+                },
+                "strength": {
+                  "type": "object", 
+                  "properties":{
+                    "title": {"type": "string"},
+                    "description": {"type": "string"},
+                    "sets": {"type": "number"},
+                    "reps": {"type": "number"},
+                    "videourl": ""
+                  }
+                },
+                "core": {
+                  "type": "object", 
+                  "properties":{
+                  "title": {"type": "string"},
+                    "description": {"type": "string"},
+                    "sets": {"type": "number"},
+                    "reps": {"type": "number"},
+                    "videourl": ""
+                  }
+                },
+                "cardio": {
+                  "type": "object", 
+                  "properties":{
+                  "title": {"type": "string"},
+                    "description": {"type": "string"},
+                    "sets": {"type": "number"},
+                    "reps": {"type": "number"},
+                    "videourl": ""
+                  }
+                },
+                "cooldown": {
+                  "type": "object", 
+                  "properties":{
+                  "title": {"type": "string"},
+                    "description": {"type": "string"},
+                    "sets": {"type": "number"},
+                    "reps": {"type": "number"},
+                    "videourl": ""
+                  }
+                }
               }
             }
           }
@@ -232,53 +207,12 @@ async function generate_plan(params) {
       break;
   }
 
-  console.log(prompt);
-  //   let prompt = `Generate a meal plan, wellness plan and a fitness plan for someone
-  //     who is ${params.typeOfWork} "and works as a ${params.occupation}. He is an ${params.dailyRoutine} who does not go to gym,
-  //     looking to ${params.weightGoal} and ${medicalCondition}. His body weight is ${params.weight}kg and height of  ${params.height} cm
-  //     ${params.enjoyedActivity} and willing to commit ${params.daysPerWeek} days a week of ${params.hoursPerDayForFitness} hours per day to a fitness goal
-  //     and ${dietaryRestriction}. He gets ${params.sleepingHours} hours of sleep per night using this JSON Schema:
-  //     {
-  //       "type":"array",
-  //       "properties": {
-  //         "mealItem": {
-  //           "type": "object",
-  //           "properties": {
-  //             "breakfast": {"type": "string"},
-  //             "midmorning": {"type": "string"},
-  //             "lunch": {"type": "string"},
-  //             "midafternoon": {"type": "string"},
-  //             "dinner": {"type": "string"}
-  //           }
-  //         },
-  //         "fitnessItem": {
-  //           "type": "object",
-  //           "properties": {
-  //             "warmup": {"type": "string"},
-  //             "strength": {"type": "string"},
-  //             "core": {"type": "string"},
-  //             "cardio": {"type": "string"},
-  //             "cooldown": {"type": "string"}
-  //           }
-  //         },
-  //         "wellnessItem": {
-  //           "type": "object",
-  //           "properties": {
-  //             "earlymorning": {"type": "string"},
-  //             "morning": {"type": "string"},
-  //             "midday": {"type": "string"},
-  //             "afternoon": {"type": "string"},
-  //             "noontime": {"type": "string"}
-  //           }
-  //         },
-  //       }
-  //     }
-  // }`;
-
+  
   const result = await model.generateContent(prompt);
   const response = await result.response;
   const text = response.text();
   logger.info('Completed ai model generation');
+  //logger.info(text);
 
   let startIndex = text.indexOf('[');
   let endIndex = text.lastIndexOf(']');
@@ -287,47 +221,56 @@ async function generate_plan(params) {
   let data = JSON.parse(jsonContent);
 
   logger.info('Parsing the data');
-
+  
   // //save request
-  let request = {
-    typeOfWork: params.typeOfWork,
-    occupation: params.occupation,
-    dailyRoutine: params.dailyRoutine,
-    weightGoal: params.weightGoal,
-    hasMedicationCondition: params.hasMedicationCondition,
-    medicalCondition: params.medicalCondition,
-    hasDietaryRestriction: params.hasDietaryRestriction,
-    dietaryRestriction: params.dietaryRestriction,
-    weight: params.weight,
-    height: params.height,
-    enjoyedActivity: params.enjoyedActivity,
-    daysPerWeek: params.daysPerWeek,
-    hoursPerDay: params.hoursPerDayForFitness,
-    sleepingHours: params.sleepingHours,
-    userId: userId,
-    planCorrelationId: ''
-  };
-
-  const requestResult = await prisma.userPlanSettings.create({
-    data: request
+  const planRequestSettings = await prisma.userPlanSettings.findFirst({
+    where: {
+      userId: userId
+    }
   });
+
+  let planRequestSettingsFields = {};
+
+  // Check the planType and update the corresponding field
+  if (params.plan === 'meal') {
+    planRequestSettingsFields.mealPlanSetting = params;
+  } else if (params.plan === 'fitness') {
+    planRequestSettingsFields.fitnessPlanSetting = true;
+  } else if (params.plan === 'wellness') {
+    planRequestSettingsFields.wellnessPlanSetting = true;
+  }
+
+  if (planRequestSettings) {
+    await prisma.userPlanSettings.update({
+      where: {
+        id: planRequestSettings.id
+      },
+      data: planRequestSettingsFields
+    });
+  } else {
+    await prisma.userPlanSettings.create({
+      data: {
+        userId: userId,
+        ...planRequestSettingsFields
+      }
+    });
+  }
 
   const previousPlans = await prisma.userRecommendationPlan.findMany({
     where: {
       userId: userId,
       isActive: true
     }
-  })
+  });
   const prevWeeklyPlans = await prisma.userWeeklyRecommendationPlan.findMany({
-    where:{
+    where: {
       userId: userId,
       isActive: true
     }
   });
 
   if (previousPlans.length > 0) {
-
-    if(params.plan == 'fitness'){
+    if (params.plan == 'fitness') {
       console.log('updating fitness plan');
       const fitnessTitles = ['warmup', 'strength', 'core', 'cardio', 'cooldown'];
       const getRandomItem = (items) => items[Math.floor(Math.random() * items.length)];
@@ -346,17 +289,17 @@ async function generate_plan(params) {
 
       newWeekAnalytics = [];
       //console.log(previousPlans)
-      for(let i= 0; i<previousPlans.length; i++){
+      for (let i = 0; i < previousPlans.length; i++) {
         plan = previousPlans[i];
         newFitnessPlan = createPlan(fitnessTitles, 'fitnessItem', plan.dailyPlanId);
 
         weekValue = getObjectByValue(newWeekAnalytics, 'weeklyPlanId', plan.weeklyPlanId);
 
-        if(weekValue){
+        if (weekValue) {
           weekValue.numberOfActivities += newFitnessPlan.length;
           weekValue.totalPoints += newFitnessPlan.reduce((sum, item) => sum + (item.point || 0), 0);
           //console.log(weekValue);
-        }else{
+        } else {
           prevWeekPlan = getObjectByValue(prevWeeklyPlans, 'weeklyPlanId', plan.weeklyPlanId);
           weekValue = {
             userId,
@@ -387,10 +330,9 @@ async function generate_plan(params) {
         });
 
         console.log(i);
-
       }
 
-      await prisma.userWeeklyRecommendationPlan.createMany({  
+      await prisma.userWeeklyRecommendationPlan.createMany({
         data: newWeekAnalytics
       });
 

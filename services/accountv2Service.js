@@ -16,7 +16,11 @@ async function checkUser(params) {
     });
 
     if (user) {
-      return sendOtpEmail(user.email, user.id);
+      if (params.identifier.includes("@")) {
+        return sendOtpEmail(user.email, user.id);
+      }else{
+        return sendOtpPhonenumber(user.phonenumber, user.id);
+      }
     }
     return {
       status: 200,

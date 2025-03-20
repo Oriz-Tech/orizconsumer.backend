@@ -160,27 +160,11 @@ model UserSubscription{
 
 model UserPlanSettings{
   id    Int @id @default(autoincrement())
-  typeOfWork String?
-  occupation String?
-  dailyRoutine String?
-  weightGoal String?
-  hasMedicationCondition Boolean @default(false)
-  medicalCondition String?
-  hasDietaryRestriction Boolean @default(false)
-  dietaryRestriction String?
-  weight Int
-  height Int
-  enjoyedActivity String?
-  daysPerWeek Int
-  hoursPerDay Int
-  sleepingHours Int
-  isActive Boolean @default(true)
-  createdAt  DateTime @default(now())
-  updatedAt DateTime?
+  fitnessPlanSetting Json?
+  mealPlanSetting Json?
+  wellnessPlanSetting Json?
   user         User     @relation(fields: [userId], references: [id])
   userId       Int
-  planCorrelationId String
-  neededCalPerday Int?
 }
 
 model AppSubscription{

@@ -53,6 +53,23 @@ const verifyPhoneNumber = async (req, res) => {
   }
 };
 
+const accountLogin = async (req, res) => {
+  try {
+    const result = await verifyOtpSendOrLogin(req.body, false);
+    res.status(result.status).json(result);
+  } catch (error) {
+    logger.error(
+      `{verifyPhoneNumber user request: ${req.body.identifier}} failed with error ${error}`
+    );
+    res.status(error.status || 500).json({
+      status: 500,
+      message: 'Sorry, an error occured',
+      code: 'E00',
+      data: null
+    });
+  }
+};
+
 const createProfileEndpoint = async (req, res) => {
   try {
     const result = await createProfile(req.body, false);
@@ -93,5 +110,6 @@ module.exports = {
   verifyEmail,
   verifyPhoneNumber,
   createProfileEndpoint,
-  updateDetails
+  updateDetails,
+  accountLogin
 };
