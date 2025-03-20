@@ -2,6 +2,7 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 const { getCurrentDateUtc } = require('../common/helpers/dateTimeHelper');
 const { v4: uuidv4 } = require('uuid');
 const { startOfDay, endOfDay, getWeekOfMonth } = require('date-fns');
+const workoutActivities = require('../utils/activitiesList');
 
 // Access your API key as an environment variable (see "Set up your API key" above)
 const genAI = new GoogleGenerativeAI(process.env.API_KEY);
@@ -115,14 +116,17 @@ async function generate_plan(params) {
         }`;
       break;
     case 'fitness':
-      prompt = `Create a personalized fitness plan with the following parameters: 
+      prompt = `Create a personalized 3-day fitness plan with exercise activities 
+      from the following lists ${JSON.stringify(workoutActivities)} to fit within
+      the following parameters: 
       the individual goal is to ${params.weightGoal}, 
       they are ${params.activity}, prefer ${params.workoutType} workouts, 
       and are willing to commit to ${params.daysPerWeek} days per week. 
-      They also have ${params.allergies} allergies.Include walks and runs, and provide each workout in 
-      reps and sets with proper workout terminology. For each activity, 
+      They also have ${params.allergies} allergies.
+      Include walks and runs, and provide each workout in 
+      reps and sets with proper workout terminology.For each activity, 
       offer a one-sentence short description, make the title two words
-       and structure the plan using this JSON schema::
+       and structure the plan using this JSON schema:
         {
           "type":"array",
           "properties": {
@@ -134,8 +138,8 @@ async function generate_plan(params) {
                   "properties":{
                   "title": {"type": "string"},
                     "description": {"type": "string"},
-                    "sets": {"type": "number"},
-                    "reps": {"type": "number"},
+                    "sets": {"type": "Integer"},
+                    "reps": {"type": "Integer"},
                     "videourl": ""
                   }
                 },
@@ -144,8 +148,8 @@ async function generate_plan(params) {
                   "properties":{
                     "title": {"type": "string"},
                     "description": {"type": "string"},
-                    "sets": {"type": "number"},
-                    "reps": {"type": "number"},
+                    "sets": {"type": "Integer"},
+                    "reps": {"type": "Integer"},
                     "videourl": ""
                   }
                 },
@@ -154,8 +158,8 @@ async function generate_plan(params) {
                   "properties":{
                   "title": {"type": "string"},
                     "description": {"type": "string"},
-                    "sets": {"type": "number"},
-                    "reps": {"type": "number"},
+                    "sets": {"type": "Integer"},
+                    "reps": {"type": "Integer"},
                     "videourl": ""
                   }
                 },
@@ -164,8 +168,8 @@ async function generate_plan(params) {
                   "properties":{
                   "title": {"type": "string"},
                     "description": {"type": "string"},
-                    "sets": {"type": "number"},
-                    "reps": {"type": "number"},
+                    "sets": {"type": "Integer"},
+                    "reps": {"type": "Integer"},
                     "videourl": ""
                   }
                 },
@@ -174,8 +178,8 @@ async function generate_plan(params) {
                   "properties":{
                   "title": {"type": "string"},
                     "description": {"type": "string"},
-                    "sets": {"type": "number"},
-                    "reps": {"type": "number"},
+                    "sets": {"type": "Integer"},
+                    "reps": {"type": "Integer"},
                     "videourl": ""
                   }
                 }
@@ -207,12 +211,13 @@ async function generate_plan(params) {
       break;
   }
 
-  
+  //console.log(prompt);
   const result = await model.generateContent(prompt);
   const response = await result.response;
   const text = response.text();
   logger.info('Completed ai model generation');
   //logger.info(text);
+  //return;
 
   let startIndex = text.indexOf('[');
   let endIndex = text.lastIndexOf(']');
@@ -235,9 +240,9 @@ async function generate_plan(params) {
   if (params.plan === 'meal') {
     planRequestSettingsFields.mealPlanSetting = params;
   } else if (params.plan === 'fitness') {
-    planRequestSettingsFields.fitnessPlanSetting = true;
+    planRequestSettingsFields.fitnessPlanSetting = params;
   } else if (params.plan === 'wellness') {
-    planRequestSettingsFields.wellnessPlanSetting = true;
+    planRequestSettingsFields.wellnessPlanSetting = params;
   }
 
   if (planRequestSettings) {
@@ -502,6 +507,7 @@ Date.prototype.addDays = function (days) {
 };
 
 function generateWeeklyPlans(data, startDate, numberOfDays, userId, options = 'meal') {
+  console.log(JSON.stringify(data));
   const mealTitles = ['breakfast', 'midmorning', 'lunch', 'midafternoon', 'dinner'];
   const fitnessTitles = ['warmup', 'strength', 'core', 'cardio', 'cooldown'];
   const wellnessTitles = ['earlymorning', 'morning', 'midday', 'afternoon', 'noontime'];
@@ -513,7 +519,7 @@ function generateWeeklyPlans(data, startDate, numberOfDays, userId, options = 'm
   const createPlan = (titles, dataKey, dailyId) =>
     titles.map((title) => ({
       title,
-      detail: getRandomItem(data)[dataKey][title],
+      detail: getRandomItem(data)[title],
       point: Math.floor(Math.random() * 30) + 10,
       isDone: false,
       planDetailId: `${dailyId}-${title}-${Math.floor(Math.random() * 10000)}`

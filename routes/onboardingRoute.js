@@ -43,6 +43,6 @@ router.post('/api/account/verify/phonenumber', accountv2Controller.verifyPhoneNu
 router.post('/api/account/profile', accountv2Controller.createProfileEndpoint);
 router.post('/api/account/details', checkAuthMiddleware, accountv2Controller.updateDetails);
 
-router.post('/api/account/login', checkAuthMiddleware, accountv2Controller.accountLogin);
+router.post('/api/account/login', accountv2Controller.accountLogin);
 
 module.exports = router;
